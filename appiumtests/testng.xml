@@ -1,0 +1,9 @@
+<suite name="Suite">
+  <test name="TestRun">
+    <classes>
+     <class name="Tests.Tests"/>
+      <class name="Tests.Job_Board"/>
+     <class name="Tests.Job_Management"/>
+      </classes>
+  </test>
+</suite>

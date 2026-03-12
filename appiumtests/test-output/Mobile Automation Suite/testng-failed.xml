@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Failed suite [Mobile Automation Suite]" guice-stage="DEVELOPMENT">
+  <test thread-count="5" name="Mobile Tests(failed)">
+    <classes>
+      <class name="Tests.JobBoard">
+        <methods>
+          <include name="testsix"/>
+          <include name="testFour"/>
+          <include name="testFive"/>
+          <include name="testtwo"/>
+          <include name="testseven"/>
+          <include name="testEight"/>
+          <include name="testthree"/>
+          <include name="testElevan"/>
+          <include name="setup"/>
+          <include name="testnine"/>
+          <include name="teardown"/>
+          <include name="testTen"/>
+        </methods>
+      </class> <!-- Tests.JobBoard -->
+      <class name="Tests.Job_Management">
+        <methods>
+          <include name="testSeventeen"/>
+          <include name="testSixteen"/>
+          <include name="setup"/>
+          <include name="teardown"/>
+          <include name="testThirteen"/>
+          <include name="testone"/>
+          <include name="testNineteen"/>
+          <include name="testsix"/>
+          <include name="testFour"/>
+          <include name="testEighteen"/>
+          <include name="testFive"/>
+          <include name="testTwentyone"/>
+          <include name="testFifteen"/>
+          <include name="testseven"/>
+          <include name="testTwelve"/>
+          <include name="testEight"/>
+          <include name="testthree"/>
+          <include name="testEleven"/>
+          <include name="testnine"/>
+          <include name="testTwenty"/>
+          <include name="testtwo"/>
+        </methods>
+      </class> <!-- Tests.Job_Management -->
+    </classes>
+  </test> <!-- Mobile Tests(failed) -->
+</suite> <!-- Failed suite [Mobile Automation Suite] -->
