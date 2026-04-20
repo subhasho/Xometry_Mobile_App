@@ -9,11 +9,16 @@
 #
 # Optional: Repo → Settings → Environments → "stage" → add required reviewers so deploy
 # waits for approval after OPC passes.
+#
+# Triggers: manual (workflow_dispatch), or automatic on every push to main (uses testng.xml).
 # -----------------------------------------------------------------------------
 
 name: Deploy to stage (OPC quality gate)
 
 on:
+  push:
+    branches: [main]
+
   workflow_dispatch:
     inputs:
       suite_file:
@@ -31,7 +36,8 @@ jobs:
     name: "Step 1 — OPC tests (must pass)"
     uses: ./.github/workflows/appium-stage-opc.yml
     with:
-      suite_file: ${{ inputs.suite_file }}
+      # workflow_dispatch: use input; push: no inputs — default to testng.xml
+      suite_file: ${{ github.event_name == 'workflow_dispatch' && inputs.suite_file || 'testng.xml' }}
 
   deploy-stage:
     name: "Step 2 — Deploy to stage"
