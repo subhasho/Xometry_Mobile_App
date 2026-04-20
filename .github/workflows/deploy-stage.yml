@@ -1,0 +1,50 @@
+# -----------------------------------------------------------------------------
+# Deploy to stage — OPC quality gate (Step 4)
+#
+# Order: 1) Run full OPC suite on self-hosted (Appium + device). 2) Only if tests pass,
+#        run the deploy job below.
+#
+# Replace the "Deploy to stage" step with your real command (Fastlane, Firebase App
+# Distribution, internal track, kubectl, etc.).
+#
+# Optional: Repo → Settings → Environments → "stage" → add required reviewers so deploy
+# waits for approval after OPC passes.
+# -----------------------------------------------------------------------------
+
+name: Deploy to stage (OPC quality gate)
+
+on:
+  workflow_dispatch:
+    inputs:
+      suite_file:
+        description: "TestNG suite (testng.xml = login + all OPC tests)"
+        required: true
+        default: testng.xml
+        type: string
+
+concurrency:
+  group: deploy-stage-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  opc-quality-gate:
+    name: "Step 1 — OPC tests (must pass)"
+    uses: ./.github/workflows/appium-stage-opc.yml
+    with:
+      suite_file: ${{ inputs.suite_file }}
+
+  deploy-stage:
+    name: "Step 2 — Deploy to stage"
+    needs: opc-quality-gate
+    runs-on: ubuntu-latest
+    environment: stage
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to stage
+        run: |
+          echo "OPC quality gate passed. Add your deploy commands here."
+          echo "Examples: fastlane stage, firebase appdistribution:distribute, gh release, kubectl apply ..."
+          # exit 1  # uncomment to fail until you wire a real deploy

@@ -1,11 +1,11 @@
 # Appium / OPC — CI
 #
-# - Every push/PR: compile test sources (no device, no Appium).
-# - Manual "Run workflow": optional E2E on a self-hosted runner where Appium + Android device/emulator
-#   are already configured (matches how Tests.BaseClass connects to http://127.0.0.1:4723).
+# - Every push/PR:
+#   1) opc-suite — confirms Tests.OPC is on disk and wired in testng.xml (and opc-only XML exists).
+#   2) compile — mvn test-compile (includes OPC.java with the rest of appiumtests).
+# - Manual "Run workflow": optional E2E on a self-hosted runner (Appium + device; run testng.xml or testng-opc-only.xml).
 #
-# Self-hosted setup (summary): install Appium 2, UiAutomator2 driver, JDK 17, Android SDK/adb; register
-# a self-hosted runner on that machine; ensure device is connected or emulator is up before the job.
+# Self-hosted: Appium 2, UiAutomator2, JDK 17, adb/device; runner registered on that machine.
 
 name: Appium
 
@@ -32,8 +32,25 @@ on:
         type: boolean
 
 jobs:
+  opc-suite:
+    name: OPC — wired in TestNG
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify Tests.OPC source and suite files
+        run: |
+          set -e
+          test -f appiumtests/src/test/java/Tests/OPC.java
+          grep -q 'class name="Tests.OPC"' appiumtests/testng.xml
+          grep -q 'Tests.OPC' appiumtests/testng.xml
+          test -f appiumtests/testng-opc-only.xml
+          grep -q 'Tests.OPC' appiumtests/testng-opc-only.xml
+          echo "OK: OPC class present; testng.xml and testng-opc-only.xml reference Tests.OPC"
+
   compile:
     name: Compile (JDK 17)
+    needs: opc-suite
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,7 +61,7 @@ jobs:
           java-version: "17"
           cache: maven
 
-      - name: Compile test sources
+      - name: Compile test sources (includes Tests.OPC)
         run: mvn -B -f appiumtests/pom.xml test-compile
 
   opc-e2e:
