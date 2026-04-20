@@ -1,0 +1,23 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.1.dtd" >
+<suite name="Suite-OPC12">
+  <!-- Login (Tests) + only OPC Test 12; TestNG still runs OPC 1–11 as dependencies of 12. -->
+  <test name="LoginThenOPC12">
+    <classes>
+      <class name="Tests.Tests">
+        <methods>
+          <include name="testone"/>
+          <include name="testtwo"/>
+          <include name="testthree"/>
+          <include name="testFour"/>
+          <include name="testFive"/>
+          <include name="testsix"/>
+        </methods>
+      </class>
+      <class name="Tests.OPC">
+        <methods>
+          <include name="opc_ClickInboxConversationRow"/>
+        </methods>
+      </class>
+    </classes>
+  </test>
+</suite>

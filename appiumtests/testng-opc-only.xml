@@ -1,0 +1,16 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.1.dtd" >
+<suite name="Suite-OPC-Only">
+  <!--
+    Only Tests.OPC (no Tests.Tests login). Requires an already-logged-in session
+    (e.g. BaseClass noReset=true) or run will fail at app screens that need auth.
+
+    Run: mvn test "-Dsurefire.suiteXmlFiles=testng-opc-only.xml"
+
+    For login + OPC 12–22 only, use testng-opc12-14.xml instead.
+  -->
+  <test name="OPC_All">
+    <classes>
+      <class name="Tests.OPC"/>
+    </classes>
+  </test>
+</suite>

@@ -1,0 +1,76 @@
+# Appium / OPC — CI
+#
+# - Every push/PR: compile test sources (no device, no Appium).
+# - Manual "Run workflow": optional E2E on a self-hosted runner where Appium + Android device/emulator
+#   are already configured (matches how Tests.BaseClass connects to http://127.0.0.1:4723).
+#
+# Self-hosted setup (summary): install Appium 2, UiAutomator2 driver, JDK 17, Android SDK/adb; register
+# a self-hosted runner on that machine; ensure device is connected or emulator is up before the job.
+
+name: Appium
+
+on:
+  push:
+    paths:
+      - "appiumtests/**"
+      - ".github/workflows/appium.yml"
+  pull_request:
+    paths:
+      - "appiumtests/**"
+      - ".github/workflows/appium.yml"
+  workflow_dispatch:
+    inputs:
+      suite_file:
+        description: "TestNG suite file under appiumtests/ (e.g. testng.xml, testng-opc-only.xml)"
+        required: true
+        default: "testng.xml"
+        type: string
+      run_e2e:
+        description: "Run mvn test on self-hosted runner (requires Appium + device)"
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  compile:
+    name: Compile (JDK 17)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Compile test sources
+        run: mvn -B -f appiumtests/pom.xml test-compile
+
+  opc-e2e:
+    name: OPC / Appium E2E (self-hosted)
+    needs: compile
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_e2e == 'true' }}
+    runs-on: self-hosted
+    defaults:
+      run:
+        working-directory: appiumtests
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Run TestNG suite
+        run: mvn -B test "-Dsurefire.suiteXmlFiles=${{ github.event.inputs.suite_file }}"
+
+      - name: Upload Surefire reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: appiumtests/target/surefire-reports/

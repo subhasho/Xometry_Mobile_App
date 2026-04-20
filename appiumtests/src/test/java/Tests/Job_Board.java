@@ -43,11 +43,23 @@ public class Job_Board extends BaseClass {
 
     @Test(priority = 7,dependsOnGroups = {"login"},  retryAnalyzer = RetryAnalyzer.class)
     public void testSeven() throws InterruptedException {
-        Thread.sleep(8000);
+        Thread.sleep(2000);
+
+        /* OLD: deep SvgView/PathView path — breaks when Flutter widget tree changes
         MobileElement JobBoardSection = driver.findElement(By.xpath(
             "//android.view.View[@content-desc=\"Job Board\"]/com.horcrux.svg.SvgView/com.horcrux.svg.GroupView/com.horcrux.svg.PathView"
         ));
         JobBoardSection.click();
+        */
+
+        AndroidDriver<MobileElement> driver = (AndroidDriver<MobileElement>) this.driver;
+        WebDriverWait wait = new WebDriverWait(driver, 25);
+        MobileElement jobBoardSection = (MobileElement) wait.until(
+            ExpectedConditions.elementToBeClickable(
+                By.xpath("//*[contains(@content-desc,'Job Board')]")
+            )
+        );
+        jobBoardSection.click();
         System.out.println("completed TestSeven..");
     }
 

@@ -1,6 +1,9 @@
 package Tests;
 
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.By;
@@ -39,14 +42,17 @@ public class BaseClass {
                 cap.setCapability("platformVersion", "9");
                 cap.setCapability("appPackage", "com.xometry.workcenter.preview.stage");
                 cap.setCapability("appActivity", "com.xometry.workcenter.preview.stage.MainActivity");
-                cap.setCapability("noReset", true);
+                cap.setCapability("noReset", false);
                 cap.setCapability("fullReset", false);
                 cap.setCapability("automationName", "UiAutomator2");
                 cap.setCapability("adbExecTimeout", 180000);
                 cap.setCapability("uiautomator2ServerLaunchTimeout", 90000);
                 cap.setCapability("uiautomator2ServerInstallTimeout", 90000);
                 cap.setCapability("newCommandTimeout", 1200);
-                cap.setCapability("app", "C:\\Users\\subhashohal\\Downloads\\base.apk");
+                Path apk = Paths.get("C:\\Users\\subhashohal\\Downloads\\base.apk");
+                if (Files.isRegularFile(apk)) {
+                    cap.setCapability("app", apk.toAbsolutePath().toString());
+                }
 
                 URL url = new URL("http://127.0.0.1:4723/wd/hub");
                 driver = new AndroidDriver<>(url, cap);

@@ -1,0 +1,41 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.1.dtd" >
+<suite name="Suite-OPC12-27">
+  <!--
+    OPC 12–27 suite. Upload step (opc_AddFilesUploadFirstAndVerify) is commented out below — run the rest.
+    TestNG runs OPC 1–11 first if the full OPC class is used; this suite includes listed OPC methods only.
+  -->
+  <test name="LoginThenOPC12to27">
+    <classes>
+      <class name="Tests.Tests">
+        <methods>
+          <include name="testone"/>
+          <include name="testtwo"/>
+          <include name="testthree"/>
+          <include name="testFour"/>
+          <include name="testFive"/>
+          <include name="testsix"/>
+        </methods>
+      </class>
+      <class name="Tests.OPC">
+        <methods>
+          <include name="opc_ClickInboxConversationRow"/>
+          <include name="opc_ClickLinkIcon"/>
+          <include name="opc_ClickJobIdTestJob"/>
+          <include name="opc_ClickPlusIcon"/>
+          <!-- Upload / first file (Test 16) — disabled; uncomment to run -->
+          <!-- <include name="opc_AddFilesUploadFirstAndVerify"/> -->
+          <include name="opc_ClickAddParticipants"/>
+          <include name="opc_ClickFirstParticipantCheckbox"/>
+          <include name="opc_ClickAddParticipantsViewGroup"/>
+          <include name="opc_VerifyNewParticipantsAddedSuccessfully"/>
+          <include name="opc_BoldTypeTestAndSendCaret"/>
+          <include name="opc_ItalicTypeTestAndSendCaret"/>
+          <include name="opc_StrikethroughSTypeTest"/>
+          <include name="opc_PuaTextViewThreeLineTextTest"/>
+          <include name="opc_InsertLinkFillAndConfirm"/>
+          <include name="opc_SuccessfulConversationOpc"/>
+        </methods>
+      </class>
+    </classes>
+  </test>
+</suite>

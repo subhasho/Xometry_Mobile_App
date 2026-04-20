@@ -12,6 +12,8 @@ import io.appium.java_client.MobileBy;
 import io.appium.java_client.MobileElement;
 import io.appium.java_client.TouchAction;
 import io.appium.java_client.android.AndroidDriver;
+import io.appium.java_client.android.nativekey.AndroidKey;
+import io.appium.java_client.android.nativekey.KeyEvent;
 import io.appium.java_client.touch.WaitOptions;
 import io.appium.java_client.touch.offset.PointOption;
 
@@ -21,7 +23,7 @@ public class Tests extends BaseClass {
 
     @Test(priority = 1, retryAnalyzer = RetryAnalyzer.class)
     public void testone() {
-        MobileElement loginButton = driver.findElement(By.xpath("//android.view.ViewGroup[@content-desc=\"Login\"]"));
+        MobileElement loginButton = driver.findElement(By.xpath("//android.view.ViewGroup[@content-desc=\"Log In\"]"));
         loginButton.click();
         System.out.println("completed Testone..");
     }
@@ -42,10 +44,46 @@ public class Tests extends BaseClass {
 
     @Test(priority = 4, dependsOnMethods = {"testthree"}, retryAnalyzer = RetryAnalyzer.class)
     public void testFour() throws InterruptedException {
-        Thread.sleep(8000);
-        MobileElement passwordField = driver.findElement(By.xpath("//android.widget.EditText"));
-        passwordField.sendKeys("bubbles101");
+        AndroidDriver<MobileElement> androidDriver = (AndroidDriver<MobileElement>) driver;
+        // First EditText is email; last is the password field on the password step.
+        MobileElement passwordField = (MobileElement) new WebDriverWait(driver, 20).until(
+            ExpectedConditions.elementToBeClickable(
+                By.xpath("(//android.widget.EditText)[last()]")));
+
+        passwordField.click();
+
+        try {
+            passwordField.clear();
+        } catch (Exception ignored) {
+        }
+
+        try {
+            typeViaAndroidKeypad(androidDriver, "bubbles101");
+        } catch (Exception e) {
+            System.out.println("Keypad typing fallback to sendKeys: " + e.getMessage());
+            passwordField.sendKeys("bubbles101");
+        }
+
+        try {
+            androidDriver.hideKeyboard();
+        } catch (Exception ignored) {
+        }
         System.out.println("completed TestFour..");
+    }
+
+    private static void typeViaAndroidKeypad(AndroidDriver<MobileElement> driver, String text)
+        throws InterruptedException {
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (c >= '0' && c <= '9') {
+                driver.pressKey(new KeyEvent(AndroidKey.valueOf("DIGIT_" + c)));
+            } else if (Character.isLetter(c)) {
+                driver.pressKey(new KeyEvent(AndroidKey.valueOf(String.valueOf(Character.toUpperCase(c)))));
+            } else {
+                throw new IllegalArgumentException("Unsupported char for keypad typing: " + c);
+            }
+            Thread.sleep(50);
+        }
     }
 
     @Test(priority = 5, dependsOnMethods = {"testFour"}, retryAnalyzer = RetryAnalyzer.class)

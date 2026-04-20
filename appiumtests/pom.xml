@@ -31,7 +31,7 @@
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>7.11.0</version>
-            <scope>test</scope>
+            <!-- compile: required by src/main/java BaseTest/BaseClass (TestNG annotations) -->
         </dependency>
 
         <!-- Appium Java client -->
@@ -62,6 +62,14 @@
             <version>2.0.12</version>
         </dependency>
 
+        <!-- Optional: TestNG XML → PDF (mvn exec:java, see TestNgResultsToPdf) -->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>2.0.31</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -87,7 +95,31 @@
                     <suiteXmlFiles>
                         <suiteXmlFile>testng.xml</suiteXmlFile>
                     </suiteXmlFiles>
+                    <!-- Show full test output in the terminal (no buffering to file only). -->
+                    <trimStackTrace>false</trimStackTrace>
+                    <redirectTestOutputToFile>false</redirectTestOutputToFile>
+                    <printSummary>true</printSummary>
                 </configuration>
+            </plugin>
+
+            <!-- Manual: mvn -q exec:java@testng-pdf (full suite PDF) -->
+            <!-- Login steps 1–6 only: mvn -q exec:java@testng-pdf "-Dexec.args=target/surefire-reports/testng-results.xml test-output/TestNgLogin.pdf login" -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>testng-pdf</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>utils.TestNgResultsToPdf</mainClass>
+                            <classpathScope>test</classpathScope>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
         </plugins>

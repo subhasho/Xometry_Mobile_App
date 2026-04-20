@@ -1,9 +1,10 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.1.dtd" >
 <suite name="Suite">
+  <!-- Job_Board / Job_Management before OPC so post-login UI is still on home (OPC navigates deep e.g. Inbox). -->
   <test name="TestRun">
     <classes>
-     <class name="Tests.Tests"/>
-      <class name="Tests.Job_Board"/>
-     <class name="Tests.Job_Management"/>
-      </classes>
+        <class name="Tests.Tests"/>
+      <class name="Tests.OPC"/>
+    </classes>
   </test>
 </suite>
