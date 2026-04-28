@@ -72,7 +72,7 @@ jobs:
 
       - name: Start Appium server
         id: appium
-        if: steps.device.outcome == 'success'
+        if: ${{ steps.device.outcome == 'success' }}
         shell: powershell
         continue-on-error: true
         run: |
@@ -81,10 +81,10 @@ jobs:
           Invoke-WebRequest "http://127.0.0.1:4723/wd/hub/status" -UseBasicParsing | Out-Null
 
       - name: Run Appium tests (non-blocking)
-        if: steps.appium.outcome == 'success'
+        if: ${{ steps.device.outcome == 'success' && steps.appium.outcome == 'success' }}
         shell: powershell
         continue-on-error: true
-        run: mvn -f appiumtests/pom.xml test -Dsurefire.suiteXmlFiles=${TESTNG_SUITE}
+        run: mvn -f appiumtests/pom.xml test -Dsurefire.suiteXmlFiles=$env:TESTNG_SUITE
 
       - name: Upload artifacts
         if: always()
