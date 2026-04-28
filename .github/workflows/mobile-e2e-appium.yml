@@ -36,7 +36,7 @@ jobs:
     runs-on: [self-hosted, windows, mobile, appium]
     timeout-minutes: 60
     env:
-      TESTNG_SUITE: test-output/testng.xml
+      TESTNG_SUITE: testng.xml
     steps:
       - uses: actions/checkout@v4
 
