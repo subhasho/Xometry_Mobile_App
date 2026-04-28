@@ -51,6 +51,18 @@ jobs:
             echo "Appium setup failed; continuing with graceful skip mode."
           fi
 
+      - name: Check runner dependencies
+        shell: bash
+        run: |
+          echo "Runner: $RUNNER_NAME / $RUNNER_OS / $RUNNER_ARCH"
+          java -version || true
+          mvn -version || true
+          node -v || true
+          npm -v || true
+          adb version || true
+          appium -v || true
+          appium driver list --installed || true
+
       - name: Verify device connected
         id: device
         if: ${{ steps.adb.outputs.adb_ready == 'true' }}
