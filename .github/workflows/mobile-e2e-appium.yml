@@ -16,21 +16,25 @@ jobs:
       - id: flag
         shell: bash
         run: |
+          EVENT="${{ github.event_name }}"
           MSG="${{ github.event.head_commit.message || '' }}"
           TITLE="${{ github.event.pull_request.title || '' }}"
           TEXT="$MSG $TITLE"
-          if [[ "$TEXT" == *"[Run Tests]"* ]]; then
+          if [[ "$EVENT" == "workflow_dispatch" ]]; then
+            echo "run_tests=true" >> "$GITHUB_OUTPUT"
+          elif [[ "$TEXT" == *"[Run Tests]"* ]]; then
             echo "run_tests=true" >> "$GITHUB_OUTPUT"
           else
             echo "run_tests=false" >> "$GITHUB_OUTPUT"
           fi
+          echo "Event: $EVENT"
           echo "Trigger text: $TEXT"
 
   appium-tests:
     needs: gate
     if: needs.gate.outputs.run_tests == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
+    runs-on: [self-hosted, windows, mobile, appium]
+    timeout-minutes: 60
     env:
       TESTNG_SUITE: testng.xml
     steps:
@@ -47,27 +51,44 @@ jobs:
           node-version: '20'
 
       - name: Install Appium + driver
+        shell: powershell
+        continue-on-error: true
         run: |
           npm i -g appium@latest
           appium driver install uiautomator2
           appium -v
 
-      - name: Start Appium server
-        id: appium
+      - name: Verify device connected
+        id: device
+        shell: powershell
         continue-on-error: true
         run: |
-          nohup appium --base-path /wd/hub > appium.log 2>&1 &
-          sleep 8
-          curl -f http://127.0.0.1:4723/wd/hub/status
+          adb start-server
+          $devices = adb devices
+          $devices
+          if (-not ($devices | Select-String "`tdevice")) {
+            throw "No authorized Android device connected."
+          }
+
+      - name: Start Appium server
+        id: appium
+        if: steps.device.outcome == 'success'
+        shell: powershell
+        continue-on-error: true
+        run: |
+          Start-Process -FilePath "appium" -ArgumentList "--base-path /wd/hub" -RedirectStandardOutput "appium.log" -RedirectStandardError "appium.log"
+          Start-Sleep -Seconds 8
+          Invoke-WebRequest "http://127.0.0.1:4723/wd/hub/status" -UseBasicParsing | Out-Null
 
       - name: Run Appium tests (non-blocking)
         if: steps.appium.outcome == 'success'
         continue-on-error: true
         run: mvn -f appiumtests/pom.xml test -Dsurefire.suiteXmlFiles=${TESTNG_SUITE}
 
-      - name: Skip note when Appium not ready
-        if: steps.appium.outcome != 'success'
-        run: echo "Appium server not ready. Skipping mobile tests gracefully."
+      - name: Skip note when device or Appium not ready
+        if: steps.device.outcome != 'success' || steps.appium.outcome != 'success'
+        shell: powershell
+        run: Write-Host "Skipping tests gracefully: device not connected or Appium server not ready."
 
       - name: Upload artifacts
         if: always()
