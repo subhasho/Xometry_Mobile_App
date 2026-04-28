@@ -50,13 +50,27 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Appium + driver
+      - name: Ensure Appium + driver available (no reinstall if present)
         shell: powershell
         continue-on-error: true
         run: |
-          npm i -g appium@latest
-          appium driver install uiautomator2
+          $appiumCmd = Get-Command appium -ErrorAction SilentlyContinue
+          if (-not $appiumCmd) {
+            Write-Host "Appium not found. Installing..."
+            npm i -g appium@latest
+          } else {
+            Write-Host "Appium already installed."
+          }
+
           appium -v
+
+          $drivers = appium driver list --installed
+          if ($drivers -notmatch "uiautomator2") {
+            Write-Host "uiautomator2 driver missing. Installing..."
+            appium driver install uiautomator2
+          } else {
+            Write-Host "uiautomator2 driver already installed."
+          }
 
       - name: Verify device connected
         id: device
