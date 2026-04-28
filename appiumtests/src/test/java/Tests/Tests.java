@@ -18,6 +18,8 @@ import io.appium.java_client.touch.WaitOptions;
 import io.appium.java_client.touch.offset.PointOption;
 
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
 
 public class Tests extends BaseClass {
 
@@ -44,52 +46,23 @@ public class Tests extends BaseClass {
 
     @Test(priority = 4, dependsOnMethods = {"testthree"}, retryAnalyzer = RetryAnalyzer.class)
     public void testFour() throws InterruptedException {
-        AndroidDriver<MobileElement> androidDriver = (AndroidDriver<MobileElement>) driver;
-        // First EditText is email; last is the password field on the password step.
+        Thread.sleep(3000);
         MobileElement passwordField = (MobileElement) new WebDriverWait(driver, 20).until(
             ExpectedConditions.elementToBeClickable(
-                By.xpath("(//android.widget.EditText)[last()]")));
-
-        passwordField.click();
-
+                By.xpath("//android.widget.EditText")));
+        passwordField.sendKeys("bubbles101");
         try {
-            passwordField.clear();
-        } catch (Exception ignored) {
-        }
-
-        try {
-            typeViaAndroidKeypad(androidDriver, "bubbles101");
-        } catch (Exception e) {
-            System.out.println("Keypad typing fallback to sendKeys: " + e.getMessage());
-            passwordField.sendKeys("bubbles101");
-        }
-
-        try {
-            androidDriver.hideKeyboard();
+            ((AndroidDriver<MobileElement>) driver).hideKeyboard();
         } catch (Exception ignored) {
         }
         System.out.println("completed TestFour..");
     }
-
-    private static void typeViaAndroidKeypad(AndroidDriver<MobileElement> driver, String text)
-        throws InterruptedException {
-        for (int i = 0; i < text.length(); i++) {
-            char c = text.charAt(i);
-            if (c >= '0' && c <= '9') {
-                driver.pressKey(new KeyEvent(AndroidKey.valueOf("DIGIT_" + c)));
-            } else if (Character.isLetter(c)) {
-                driver.pressKey(new KeyEvent(AndroidKey.valueOf(String.valueOf(Character.toUpperCase(c)))));
-            } else {
-                throw new IllegalArgumentException("Unsupported char for keypad typing: " + c);
-            }
-            Thread.sleep(50);
-        }
-    }
-
     @Test(priority = 5, dependsOnMethods = {"testFour"}, retryAnalyzer = RetryAnalyzer.class)
-    public void testFive() throws InterruptedException {
-        Thread.sleep(3000);
-        MobileElement continueBtn1 = driver.findElement(By.xpath("//android.widget.Button[@text=\"Continue\"]"));
+    public void testFive() {
+        WebDriverWait wait = new WebDriverWait(driver, 30);
+        MobileElement continueBtn1 = (MobileElement) wait.until(
+            ExpectedConditions.elementToBeClickable(
+                By.xpath("(//android.widget.Button[@text=\"Continue\"])[last()]")));
         continueBtn1.click();
         System.out.println("completed TestFive..");
     }

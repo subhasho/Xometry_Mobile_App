@@ -36,10 +36,10 @@ public class BaseClass {
         try {
             if (!isDriverStarted) { // ✅ Launch only once
                 DesiredCapabilities cap = new DesiredCapabilities();
-                cap.setCapability("deviceName", "vivo 1916");
-                cap.setCapability("udid", "6609da97");
-                cap.setCapability("platformName", "Android");
-                cap.setCapability("platformVersion", "9");
+                cap.setCapability("deviceName", System.getenv().getOrDefault("APPIUM_DEVICE_NAME", "vivo 1916"));
+                cap.setCapability("udid", System.getenv().getOrDefault("APPIUM_UDID", "6609da97"));
+                cap.setCapability("platformName", System.getenv().getOrDefault("APPIUM_PLATFORM_NAME", "Android"));
+                cap.setCapability("platformVersion", System.getenv().getOrDefault("APPIUM_PLATFORM_VERSION", "9"));
                 cap.setCapability("appPackage", "com.xometry.workcenter.preview.stage");
                 cap.setCapability("appActivity", "com.xometry.workcenter.preview.stage.MainActivity");
                 cap.setCapability("noReset", false);
@@ -49,12 +49,30 @@ public class BaseClass {
                 cap.setCapability("uiautomator2ServerLaunchTimeout", 90000);
                 cap.setCapability("uiautomator2ServerInstallTimeout", 90000);
                 cap.setCapability("newCommandTimeout", 1200);
-                Path apk = Paths.get("C:\\Users\\subhashohal\\Downloads\\base.apk");
-                if (Files.isRegularFile(apk)) {
-                    cap.setCapability("app", apk.toAbsolutePath().toString());
+                String apkPathEnv = System.getenv("APK_PATH");
+                if (apkPathEnv != null && !apkPathEnv.isEmpty()) {
+                    Path apkUser = Paths.get(apkPathEnv);
+                    if (Files.isRegularFile(apkUser)) {
+                        cap.setCapability("app", apkUser.toAbsolutePath().toString());
+                    }
+                } else {
+                    Path apk = Paths.get("C:\\Users\\subhashohal\\Downloads\\base.apk");
+                    if (Files.isRegularFile(apk)) {
+                        cap.setCapability("app", apk.toAbsolutePath().toString());
+                    }
                 }
 
-                URL url = new URL("http://127.0.0.1:4723/wd/hub");
+                String appiumUrl = System.getenv("APPIUM_URL");
+                if (appiumUrl == null || appiumUrl.isEmpty()) {
+                    String host = System.getenv().getOrDefault("APPIUM_HOST", "127.0.0.1");
+                    String port = System.getenv().getOrDefault("APPIUM_PORT", "4723");
+                    String path = System.getenv().getOrDefault("APPIUM_BASE_PATH", "/wd/hub");
+                    if (!path.startsWith("/")) {
+                        path = "/" + path;
+                    }
+                    appiumUrl = "http://" + host + ":" + port + path;
+                }
+                URL url = new URL(appiumUrl);
                 driver = new AndroidDriver<>(url, cap);
                 driver.manage().timeouts().implicitlyWait(15, TimeUnit.SECONDS);
 
