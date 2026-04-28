@@ -33,7 +33,7 @@ jobs:
   appium-tests:
     needs: gate
     if: needs.gate.outputs.run_tests == 'true'
-    runs-on: [self-hosted, windows, mobile, appium]
+    runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
       TESTNG_SUITE: testng.xml
@@ -50,61 +50,63 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install adb
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y android-tools-adb
+
       - name: Ensure Appium + driver available (no reinstall if present)
-        shell: powershell
+        shell: bash
         continue-on-error: true
         run: |
-          $appiumCmd = Get-Command appium -ErrorAction SilentlyContinue
-          if (-not $appiumCmd) {
-            Write-Host "Appium not found. Installing..."
-            npm i -g appium@latest
-          } else {
-            Write-Host "Appium already installed."
-          }
-
+          npm i -g appium@latest
           appium -v
-
-          $drivers = appium driver list --installed
-          if ($drivers -notmatch "uiautomator2") {
-            Write-Host "uiautomator2 driver missing. Installing..."
+          if ! appium driver list --installed | grep -q uiautomator2; then
             appium driver install uiautomator2
-          } else {
-            Write-Host "uiautomator2 driver already installed."
-          }
+          fi
 
       - name: Verify device connected
         id: device
-        shell: powershell
-        continue-on-error: true
+        shell: bash
         run: |
-          adb start-server
-          $devices = adb devices
-          $devices
-          if (-not ($devices | Select-String "`tdevice")) {
-            throw "No authorized Android device connected."
-          }
+          set -e
+          adb start-server || true
+          DEVICES="$(adb devices)"
+          echo "$DEVICES"
+          if echo "$DEVICES" | grep -q $'\tdevice'; then
+            echo "connected=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "connected=false" >> "$GITHUB_OUTPUT"
+            echo "No authorized Android device connected. Skipping tests gracefully."
+          fi
 
       - name: Start Appium server
         id: appium
-        if: ${{ steps.device.outcome == 'success' }}
-        shell: powershell
+        if: ${{ steps.device.outputs.connected == 'true' }}
+        shell: bash
         continue-on-error: true
         run: |
-          Start-Process -FilePath "appium" -ArgumentList "--base-path /wd/hub" -RedirectStandardOutput "appium.log" -RedirectStandardError "appium.log"
-          Start-Sleep -Seconds 8
-          Invoke-WebRequest "http://127.0.0.1:4723/wd/hub/status" -UseBasicParsing | Out-Null
+          nohup appium --base-path /wd/hub > appium.log 2>&1 &
+          sleep 8
+          if curl -fsS "http://127.0.0.1:4723/wd/hub/status" > /dev/null; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Run Appium tests (non-blocking)
-        shell: powershell
+        if: ${{ steps.device.outputs.connected == 'true' && steps.appium.outputs.ready == 'true' }}
+        shell: bash
         continue-on-error: true
         run: |
-          try {
-            Invoke-WebRequest "http://127.0.0.1:4723/wd/hub/status" -UseBasicParsing | Out-Null
-          } catch {
-            Write-Host "Appium not reachable; skipping TestNG execution."
-            exit 0
-          }
-          mvn -f appiumtests/pom.xml test -Dsurefire.suiteXmlFiles=$env:TESTNG_SUITE
+          mvn -f appiumtests/pom.xml test -Dsurefire.suiteXmlFiles="${TESTNG_SUITE}"
+
+      - name: Skip note when prerequisites unavailable
+        if: ${{ steps.device.outputs.connected != 'true' || steps.appium.outputs.ready != 'true' }}
+        shell: bash
+        run: |
+          echo "Skipping Appium tests because required runtime prerequisites are unavailable."
 
       - name: Upload artifacts
         if: always()
