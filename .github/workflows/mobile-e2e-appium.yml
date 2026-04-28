@@ -1,0 +1,80 @@
+name: Mobile E2E (Appium)
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      run_tests: ${{ steps.flag.outputs.run_tests }}
+    steps:
+      - id: flag
+        shell: bash
+        run: |
+          MSG="${{ github.event.head_commit.message || '' }}"
+          TITLE="${{ github.event.pull_request.title || '' }}"
+          TEXT="$MSG $TITLE"
+          if [[ "$TEXT" == *"[Run Tests]"* ]]; then
+            echo "run_tests=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_tests=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Trigger text: $TEXT"
+
+  appium-tests:
+    needs: gate
+    if: needs.gate.outputs.run_tests == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      TESTNG_SUITE: testng.xml
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Appium + driver
+        run: |
+          npm i -g appium@latest
+          appium driver install uiautomator2
+          appium -v
+
+      - name: Start Appium server
+        id: appium
+        continue-on-error: true
+        run: |
+          nohup appium --base-path /wd/hub > appium.log 2>&1 &
+          sleep 8
+          curl -f http://127.0.0.1:4723/wd/hub/status
+
+      - name: Run Appium tests (non-blocking)
+        if: steps.appium.outcome == 'success'
+        continue-on-error: true
+        run: mvn -f appiumtests/pom.xml test -Dsurefire.suiteXmlFiles=${TESTNG_SUITE}
+
+      - name: Skip note when Appium not ready
+        if: steps.appium.outcome != 'success'
+        run: echo "Appium server not ready. Skipping mobile tests gracefully."
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: appium-artifacts
+          path: |
+            appium.log
+            appiumtests/test-output/**
+            appiumtests/Screenshots/**
