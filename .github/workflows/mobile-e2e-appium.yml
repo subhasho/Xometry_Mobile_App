@@ -84,14 +84,6 @@ jobs:
         continue-on-error: true
         run: mvn -f appiumtests/pom.xml test -Dsurefire.suiteXmlFiles=${TESTNG_SUITE}
 
-      - name: Skip note when device is not ready
-        if: steps.appium.outcome == 'skipped'
-        run: echo "Skipping tests gracefully: device not connected or Appium server not ready."
-
-      - name: Skip note when Appium startup failed
-        if: steps.appium.outcome == 'failure'
-        run: echo "Skipping tests gracefully: Appium server not ready."
-
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
