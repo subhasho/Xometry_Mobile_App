@@ -33,8 +33,8 @@ jobs:
   appium-tests:
     needs: gate
     if: needs.gate.outputs.run_tests == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
+    runs-on: [self-hosted, windows, mobile, appium]
+    timeout-minutes: 60
     env:
       TESTNG_SUITE: testng.xml
     steps:
@@ -51,6 +51,7 @@ jobs:
           node-version: '20'
 
       - name: Install Appium + driver
+        shell: powershell
         continue-on-error: true
         run: |
           npm i -g appium@latest
@@ -59,28 +60,29 @@ jobs:
 
       - name: Verify device connected
         id: device
+        shell: powershell
         continue-on-error: true
         run: |
           adb start-server
-          adb devices
-          if adb devices | grep -q $'\tdevice'; then
-            echo "Device connected."
-          else
-            echo "No authorized Android device connected."
-            exit 1
-          fi
+          $devices = adb devices
+          $devices
+          if (-not ($devices | Select-String "`tdevice")) {
+            throw "No authorized Android device connected."
+          }
 
       - name: Start Appium server
         id: appium
         if: steps.device.outcome == 'success'
+        shell: powershell
         continue-on-error: true
         run: |
-          nohup appium --base-path /wd/hub > appium.log 2>&1 &
-          sleep 8
-          curl -f http://127.0.0.1:4723/wd/hub/status
+          Start-Process -FilePath "appium" -ArgumentList "--base-path /wd/hub" -RedirectStandardOutput "appium.log" -RedirectStandardError "appium.log"
+          Start-Sleep -Seconds 8
+          Invoke-WebRequest "http://127.0.0.1:4723/wd/hub/status" -UseBasicParsing | Out-Null
 
       - name: Run Appium tests (non-blocking)
         if: steps.appium.outcome == 'success'
+        shell: powershell
         continue-on-error: true
         run: mvn -f appiumtests/pom.xml test -Dsurefire.suiteXmlFiles=${TESTNG_SUITE}
 
