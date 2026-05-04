@@ -185,7 +185,7 @@ jobs:
             appiumtests/target/surefire-reports/**
 
   # ---------------------------------------------------------------------------
-  # Self-hosted PC with USB device — this is how you run full testng.xml on a real phone.
+  # Self-hosted + real USB phone — see docs/SELF_HOSTED_USB_PHONE.md
   # ---------------------------------------------------------------------------
   appium-self-hosted-device:
     name: Appium E2E (self-hosted + device, testng.xml)
