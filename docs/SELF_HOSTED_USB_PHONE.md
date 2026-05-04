@@ -37,6 +37,7 @@ Labels: default label is **`self-hosted`**. The workflow uses `runs-on: self-hos
 
 | Variable | Purpose |
 |----------|---------|
+| `RUN_DEVICE_E2E_ON_PUSH` | Set to `true` to run **`appium-self-hosted-device`** on every push (runner must be online). |
 | `APPIUM_UDID` | From `adb devices` (optional if only one device) |
 | `APPIUM_PLATFORM_VERSION` | Android version of the phone |
 | `APK_PATH` | Full path to `.apk` on the runner PC if the app is not already installed |
@@ -55,16 +56,21 @@ Either:
 
 ## 7. Run the job
 
-The **`appium-self-hosted-device`** job is **manual only** (it does **not** run on push to `main`), so routine pushes never sit **Queued** waiting for a self-hosted runner.
+**`testng.xml` on every push to `main` (without USB):** the workflow job **`appium-emulator-e2e`** already runs **`mvn … testng.xml`** on a GitHub-hosted Android emulator (see `.github/workflows/mobile-e2e-appium.yml`). Set secret **`APPIUM_E2E_APK_URL`** to a direct `.apk` URL so the app installs on the AVD.
+
+**`appium-self-hosted-device` (real phone):**
+
+- **Default:** **manual only** — **Actions → Mobile E2E (Appium) → Run workflow** (so pushes do not wait on an offline runner).  
+- **Optional:** set repository variable **`RUN_DEVICE_E2E_ON_PUSH`** to **`true`** to also run this job on **every push** to `main`. Use only when your self-hosted runner is **always online** with the phone connected; otherwise the job will **Queue**.
 
 1. Put your self-hosted runner **online** (see below).  
-2. **Actions → Mobile E2E (Appium) → Run workflow** → choose branch → **Run workflow**.
+2. Run manually as above, or enable **`RUN_DEVICE_E2E_ON_PUSH`** and push.
 
 Open the run → job **`appium-self-hosted-device`** → logs. On success, download artifact **`appium-artifacts-self-hosted`**.
 
 ### Job stuck on “Queued”?
 
-That only happens if you **manually** started the workflow while no runner is online. GitHub runs **`runs-on: self-hosted`** only when a runner for this repo is available.
+That happens when a **`self-hosted`** job is waiting for a runner (manual run, or **push** with **`RUN_DEVICE_E2E_ON_PUSH=true`**) while no runner is online.
 
 1. Repo **Settings → Actions → Runners** — the runner should show **Idle** or **Active** (not offline).  
 2. On the runner PC: open the install folder (e.g. `actions-runner`) and run **`.\run.cmd`**, or start the **GitHub Actions Runner** service.  
