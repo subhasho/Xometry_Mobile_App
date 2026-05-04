@@ -1,5 +1,6 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.1.dtd" >
-<suite name="Suite" parallel="none" thread-count="1" preserve-order="true">
+<!-- configfailurepolicy=continue: keep going if a @Before* config method fails (does not change dependsOnMethods skip-on-failure). -->
+<suite name="Suite" parallel="none" thread-count="1" preserve-order="true" configfailurepolicy="continue">
   <listeners>
     <listener class-name="Tests.AppiumSuiteListener"/>
   </listeners>

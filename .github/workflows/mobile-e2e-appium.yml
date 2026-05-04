@@ -1,21 +1,22 @@
 # Mobile E2E (Appium + TestNG)
 #
-# testng.xml uses listener Tests.AppiumSuiteListener so one Appium session spans Tests + OPC.
-# (Per-class @BeforeSuite/@AfterSuite on BaseClass would tear down the driver between classes.)
-# GitHub-hosted ubuntu-latest cannot attach a USB phone, so that job only runs tests when
-# a device is accidentally present (almost never).
+# WHY DEVICE TESTS DO NOT RUN ON EVERY PUSH BY DEFAULT
+# - Job "appium-ubuntu-smoke" runs on GitHub's cloud (ubuntu-latest). It has NO USB phone, so
+#   it almost never runs real Appium tests (adb is usually empty there).
+# - Job "appium-self-hosted-device" is the ONLY job that can drive your physical phone. It
+#   runs on YOUR machine (self-hosted runner). If that PC is off, asleep, or the runner app is
+#   not running, GitHub will queue this job and it will never reach your phone.
+# - Every push to main still *starts* the workflow, but the device job only *executes* when a
+#   self-hosted runner picks it up within the timeout and adb shows an authorized device.
 #
-# To run ALL tests from testng.xml on your phone in CI:
-# 1. On the PC that has USB debugging enabled and the device connected, install:
-#    Java 17, Maven, Node 20, Android platform-tools (adb), Appium + uiautomator2 driver.
-# 2. Register a GitHub self-hosted runner on that machine (Settings → Actions → Runners).
-# 3. Set repository Variables (optional if one device is connected — UDID is auto-detected):
-#    APPIUM_UDID, APPIUM_DEVICE_NAME, APPIUM_PLATFORM_VERSION (match your device)
-#    APK_PATH — absolute path to the .apk on the runner (or omit if app already installed)
-# 4. Windows self-hosted: install Git if you use bash; otherwise the workflow uses PowerShell.
-# 5. Every push to main (including empty commits) runs job appium-self-hosted-device — keep a
-#    self-hosted runner online with the phone connected, or that job will stay queued / fail.
-#    To turn off device runs on push only, set variable SKIP_DEVICE_E2E_ON_PUSH=true.
+# testng.xml uses listener Tests.AppiumSuiteListener so one Appium session spans Tests + OPC.
+#
+# Setup checklist (self-hosted PC + phone):
+# 1. USB debugging on, device shows "device" (not unauthorized) in adb devices.
+# 2. Install Java 17, Maven, Node 20, adb, Appium + uiautomator2 on that PC.
+# 3. Register a repo self-hosted runner and keep it running (Windows Service / launchd / systemd).
+# 4. Optional repo Variables: APPIUM_UDID, APPIUM_PLATFORM_VERSION, APK_PATH (see BaseClass).
+# 5. To skip device job on push only: set repo variable SKIP_DEVICE_E2E_ON_PUSH=true.
 
 name: Mobile E2E (Appium)
 
@@ -164,6 +165,20 @@ jobs:
       APPIUM_URL: ${{ secrets.APPIUM_URL }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Why this job may not hit your phone every time (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          echo "::notice::Device E2E runs ONLY on self-hosted runners (this machine). GitHub-hosted ubuntu cannot use USB."
+          echo "Runner: $RUNNER_NAME | OS=$RUNNER_OS | Event=$GITHUB_EVENT_NAME | Ref=$GITHUB_REF"
+
+      - name: Why this job may not hit your phone every time (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          Write-Host "::notice::Device E2E runs ONLY on self-hosted runners (this machine). GitHub-hosted ubuntu cannot use USB."
+          Write-Host "Runner=$env:RUNNER_NAME OS=$env:RUNNER_OS Event=$env:GITHUB_EVENT_NAME Ref=$env:GITHUB_REF"
 
       - uses: actions/setup-java@v4
         with:
