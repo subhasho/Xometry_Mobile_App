@@ -68,6 +68,17 @@ Either:
 
 Open the run → job **`appium-self-hosted-device`** → logs. On success, download artifact **`appium-artifacts-self-hosted`**.
 
+### Validating with an empty commit
+
+Yes. A push to `main` is a push to `main` for Actions: an **empty commit** triggers the **same** **Mobile E2E (Appium)** workflow, including **`appium-self-hosted-device`** (unless **`SKIP_DEVICE_E2E_ON_PUSH=true`**) and **`appium-emulator-e2e`** (unless **`SKIP_EMULATOR_E2E_ON_PUSH=true`**).
+
+```bash
+git commit --allow-empty -m "ci: validate workflow on push"
+git push <remote> main
+```
+
+There is **no** separate **`RUN_DEVICE_E2E_ON_PUSH`** variable in this repo anymore: the real-device job is **on by default for every push**; use **`SKIP_DEVICE_E2E_ON_PUSH`** only when you want pushes to **skip** that job while the runner is down.
+
 ### Job stuck on “Queued”?
 
 That happens when a **`self-hosted`** job is waiting for a runner (e.g. after a **push** while the runner is **offline**). Set **`SKIP_DEVICE_E2E_ON_PUSH=true`** if you want pushes to skip this job until the runner is fixed, or cancel the queued run.
