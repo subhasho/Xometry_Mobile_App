@@ -60,6 +60,16 @@ Either:
 
 Open the run → job **`appium-self-hosted-device`** → logs. On success, download artifact **`appium-artifacts-self-hosted`**.
 
+### Job stuck on “Queued”?
+
+GitHub only runs **`runs-on: self-hosted`** jobs when a **runner for this repo is online**. If the PC is off, the runner process was closed, or the Windows service is stopped, the job waits (often until timeout).
+
+1. Repo **Settings → Actions → Runners** — each runner should show **Idle** or **Active** (not offline).  
+2. On the runner PC: open the install folder (e.g. `actions-runner`) and run **`.\run.cmd`**, or start the **GitHub Actions Runner** service.  
+3. From repo root, with [GitHub CLI](https://cli.github.com/) logged in:  
+   `powershell -File scripts\validate-self-hosted-prereqs.ps1`  
+   It checks `adb`, Maven, Node, Appium, and lists runner status via `gh api`.
+
 ## 8. Same machine, without GitHub (local)
 
 From repo root:
