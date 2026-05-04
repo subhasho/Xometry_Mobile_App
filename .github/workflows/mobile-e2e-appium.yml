@@ -17,6 +17,12 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+# Latest push wins: cancel older push runs (Queued/In progress). Manual runs use a separate group
+# so a long workflow_dispatch is not cancelled by an unrelated push.
+concurrency:
+  group: mobile-e2e-appium-${{ github.ref }}-${{ github.event_name == 'workflow_dispatch' && 'manual' || 'push' }}
+  cancel-in-progress: true
+
 env:
   TESTNG_SUITE: testng.xml
 
