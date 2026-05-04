@@ -84,6 +84,11 @@ public class BaseClass {
         } catch (Exception e) {
             System.out.println("❌ Driver setup failed: " + e.getMessage());
             e.printStackTrace();
+            isDriverStarted = false;
+            driver = null;
+            throw new RuntimeException(
+                "Appium driver failed to start. Check APPIUM_URL, APPIUM_UDID, Appium server, and APK_PATH.",
+                e);
         }
     }
 
@@ -103,6 +108,8 @@ public class BaseClass {
                     System.out.println("🔄 Session kept alive");
                 }
             }
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
             System.out.println("⚠️ Session check failed: " + e.getMessage());
         }

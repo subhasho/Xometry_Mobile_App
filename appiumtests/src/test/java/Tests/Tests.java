@@ -18,8 +18,6 @@ import io.appium.java_client.touch.WaitOptions;
 import io.appium.java_client.touch.offset.PointOption;
 
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.List;
 
 public class Tests extends BaseClass {
 
@@ -75,47 +73,36 @@ public class Tests extends BaseClass {
         System.out.println("completed Testsix..");
     }
 
-    
-    
-   /* @Test(priority = 6, dependsOnMethods = {"testFive"}, retryAnalyzer = RetryAnalyzer.class)
-    public void testsix() throws InterruptedException {
-        Thread.sleep(3000);
-        handleOpenAppPopup(driver);
-        System.out.println("completed Testsix..");
-    }
-
-   /* @Test(priority = 7, dependsOnMethods = {"testsix"}, retryAnalyzer = RetryAnalyzer.class)
+    @Test(priority = 7, dependsOnMethods = {"testsix"}, retryAnalyzer = RetryAnalyzer.class)
     public void testSeven() throws InterruptedException {
         Thread.sleep(8000);
-        MobileElement JobBoardSection = driver.findElement(By.xpath(
+        MobileElement jobBoardSection = driver.findElement(By.xpath(
             "//android.view.View[@content-desc=\"Job Board\"]/com.horcrux.svg.SvgView/com.horcrux.svg.GroupView/com.horcrux.svg.PathView"
         ));
-        JobBoardSection.click();
+        jobBoardSection.click();
         System.out.println("completed TestSeven..");
     }
 
-    
-   /* @Test(priority = 8, dependsOnMethods = {"testSeven"}, retryAnalyzer = RetryAnalyzer.class)
+    @Test(priority = 8, dependsOnMethods = {"testSeven"}, retryAnalyzer = RetryAnalyzer.class)
     public void testEight_ViewOfferDetails() throws InterruptedException {
         Thread.sleep(8000);
-        AndroidDriver<MobileElement> driver = (AndroidDriver<MobileElement>) this.driver;
-        Dimension size = driver.manage().window().getSize();
+        AndroidDriver<MobileElement> ad = (AndroidDriver<MobileElement>) this.driver;
+        Dimension size = ad.manage().window().getSize();
         int startX = size.width / 2;
         int startY = (int) (size.height * 0.8);
         int endY = (int) (size.height * 0.3);
 
         for (int i = 0; i < 5; i++) {
             try {
-                MobileElement el = driver.findElement(By.xpath(
+                MobileElement el = ad.findElement(By.xpath(
                     "//*[contains(@content-desc,'View Offer Details') or contains(@text,'View Offer Details')]"
                 ));
                 el.click();
                 System.out.println("✅ Clicked 'View Offer Details'");
-                // Wait for navigation to complete
                 Thread.sleep(5000);
                 return;
             } catch (Exception e) {
-                new TouchAction<>(driver)
+                new TouchAction<>(ad)
                     .press(PointOption.point(startX, startY))
                     .waitAction(WaitOptions.waitOptions(Duration.ofMillis(800)))
                     .moveTo(PointOption.point(startX, endY))
@@ -126,107 +113,35 @@ public class Tests extends BaseClass {
         }
         Assert.fail("❌ 'View Offer Details' not found after scrolling");
     }
-    
+
     @Test(priority = 9, dependsOnMethods = {"testEight_ViewOfferDetails"}, retryAnalyzer = RetryAnalyzer.class)
     public void testNine_ProvideFeedback() throws InterruptedException {
-        Thread.sleep(6000);
-        AndroidDriver<MobileElement> driver = (AndroidDriver<MobileElement>) this.driver;
-
-        try {
-            WebDriverWait wait = new WebDriverWait(driver, 20);
-            MobileElement feedbackBtn = (MobileElement) wait.until(
-                ExpectedConditions.elementToBeClickable(
-                    By.xpath("//android.widget.Button[@content-desc='Provide Feedback']")
-                )
-            );
-            feedbackBtn.click();
-            System.out.println("✅ Clicked 'Provide Feedback'");
-
-            // Wait briefly to see if app remains active
-            Thread.sleep(5000);
-
-            // Check if app is still running
-            if (driver.getSessionId() == null) {
-                System.out.println("⚠️ App session closed after clicking feedback. Possible crash or exit.");
-                return;
-            }
-
-            // Optional: verify if the feedback form screen appeared
-            try {
-                driver.findElement(By.xpath("//*[contains(@text,'Feedback') or contains(@content-desc,'Feedback')]"));
-                System.out.println("✅ Feedback screen opened successfully.");
-            } catch (Exception inner) {
-                System.out.println("⚠️ Feedback screen not detected, app may have switched context or closed.");
-            }
-
-        } catch (Exception e) {
-            System.out.println("❌ Error clicking 'Provide Feedback': " + e.getMessage());
-            Assert.fail("Provide Feedback failed or app closed unexpectedly.");
-        }
+        Thread.sleep(8000);
+        WebDriverWait wait = new WebDriverWait(driver, 20);
+        MobileElement feedbackBtn = (MobileElement) wait.until(
+            ExpectedConditions.elementToBeClickable(
+                By.xpath("//android.widget.Button[@content-desc='Provide Feedback']")
+            )
+        );
+        feedbackBtn.click();
+        System.out.println("completed TestNine_ProvideFeedback..");
     }
 
-    */
-    
-    
-    
-  /*  @Test(priority = 8, dependsOnMethods = {"testSeven"}, retryAnalyzer = RetryAnalyzer.class)
-    public void testEight_ViewOfferDetails() throws InterruptedException {
-        Thread.sleep(8000);
-        AndroidDriver<MobileElement> driver = (AndroidDriver<MobileElement>) this.driver;
-        Dimension size = driver.manage().window().getSize();
-        int startX = size.width / 2;
-        int startY = (int) (size.height * 0.8);
-        int endY = (int) (size.height * 0.3);
-
-        for (int i = 0; i < 1; i++) {
-            try {
-                MobileElement el = driver.findElement(By.xpath(
-                    "//*[contains(@content-desc,'View Offer Details') or contains(@text,'View Offer Details')]"
-                ));
-                el.click();
-                System.out.println("✅ Clicked 'View Offer Details'");
-                return;
-            } catch (Exception e) {
-                new TouchAction<>(driver)
-                    .press(PointOption.point(startX, startY))
-                    .waitAction(WaitOptions.waitOptions(Duration.ofMillis(700)))
-                    .moveTo(PointOption.point(startX, endY))
-                    .release()
-                    .perform();
-                System.out.println("🔄 Swiping up... " + (i + 1));
-            }
-        }
-        Assert.fail("❌ 'View Offer Details' not found after scrolling");
-    
-}
-    
-    
-  
-    @Test(priority = 9, dependsOnMethods = {"testEight_ViewOfferDetails"}, retryAnalyzer = RetryAnalyzer.class)
-    public void testNine_ProvideFeedback() throws InterruptedException {
-        Thread.sleep(8000);
-        MobileElement Provide_Feedback = driver.findElement(By.xpath("//android.widget.Button[@content-desc=\"Provide Feedback\"]" ));
-        Provide_Feedback.click();
-        System.out.println("completed TestNine_ProvideFeedback..");
-    }*/
-    
-    
-
- /*  @Test(priority = 10,  retryAnalyzer = RetryAnalyzer.class)
+    @Test(priority = 10, dependsOnMethods = {"testNine_ProvideFeedback"}, retryAnalyzer = RetryAnalyzer.class)
     public void testTen_JobManagement() throws InterruptedException {
         Thread.sleep(8000);
-        MobileElement JobManagementSection = driver.findElement(By.xpath(
+        MobileElement jobManagementSection = driver.findElement(By.xpath(
             "//android.view.View[@content-desc=\"Job Management\"]/com.horcrux.svg.SvgView/com.horcrux.svg.GroupView/com.horcrux.svg.PathView"
         ));
-        JobManagementSection.click();
+        jobManagementSection.click();
         System.out.println("completed TestTen_JobManagement..");
     }
 
     @Test(priority = 11, dependsOnMethods = {"testTen_JobManagement"}, retryAnalyzer = RetryAnalyzer.class)
     public void testEleven_SearchJob() throws InterruptedException {
         Thread.sleep(8000);
-        MobileElement CurrentWorkSection = driver.findElement(By.xpath("//android.widget.EditText[@text=\"Search Jobs\"]"));
-        CurrentWorkSection.sendKeys("J004CD16");
+        MobileElement searchJobs = driver.findElement(By.xpath("//android.widget.EditText[@text=\"Search Jobs\"]"));
+        searchJobs.sendKeys("J004CD16");
         System.out.println("valid search input ");
         System.out.println("completed TestEleven_SearchJob..");
     }
@@ -234,28 +149,22 @@ public class Tests extends BaseClass {
     @Test(priority = 12, dependsOnMethods = {"testEleven_SearchJob"}, retryAnalyzer = RetryAnalyzer.class)
     public void testTwelve_ViewDetails() throws InterruptedException {
         Thread.sleep(8000);
-        AndroidDriver<MobileElement> driver = (AndroidDriver<MobileElement>) this.driver;
+        AndroidDriver<MobileElement> ad = (AndroidDriver<MobileElement>) this.driver;
 
-        try {
-            driver.findElement(MobileBy.AndroidUIAutomator(
-                "new UiScrollable(new UiSelector().scrollable(true))" +
-                ".scrollIntoView(new UiSelector().description(\"View Details\"))"
-            ));
+        ad.findElement(MobileBy.AndroidUIAutomator(
+            "new UiScrollable(new UiSelector().scrollable(true))"
+                + ".scrollIntoView(new UiSelector().description(\"View Details\"))"
+        ));
 
-            WebDriverWait wait = new WebDriverWait(driver, 30);
-            MobileElement viewDetails = (MobileElement) wait.until(
-                ExpectedConditions.visibilityOfElementLocated(
-                    By.xpath("//android.view.ViewGroup[@content-desc='View Details']")
-                )
-            );
-            viewDetails.click();
-            System.out.println("Navigated to Job overview page");
-        } catch (Exception e) {
-            System.out.println("Element not found or error occurred: " + e.getMessage());
-        }
-    }  
-*/
-
+        WebDriverWait wait = new WebDriverWait(ad, 30);
+        MobileElement viewDetails = (MobileElement) wait.until(
+            ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//android.view.ViewGroup[@content-desc='View Details']")
+            )
+        );
+        viewDetails.click();
+        System.out.println("Navigated to Job overview page");
+    }
 
     //  Add this method to fix the missing method error
     public void handleOpenAppPopup(AppiumDriver<MobileElement> driver) {

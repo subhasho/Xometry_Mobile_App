@@ -8,10 +8,11 @@
 # 1. On the PC that has USB debugging enabled and the device connected, install:
 #    Java 17, Maven, Node 20, Android platform-tools (adb), Appium + uiautomator2 driver.
 # 2. Register a GitHub self-hosted runner on that machine (Settings → Actions → Runners).
-# 3. Set repository Variables (Settings → Secrets and variables → Actions → Variables):
+# 3. Set repository Variables (optional if one device is connected — UDID is auto-detected):
 #    APPIUM_UDID, APPIUM_DEVICE_NAME, APPIUM_PLATFORM_VERSION (match your device)
 #    APK_PATH — absolute path to the .apk on the runner (or omit if app already installed)
-# 4. Every push to main (including empty commits) runs job appium-self-hosted-device — keep a
+# 4. Windows self-hosted: install Git if you use bash; otherwise the workflow uses PowerShell.
+# 5. Every push to main (including empty commits) runs job appium-self-hosted-device — keep a
 #    self-hosted runner online with the phone connected, or that job will stay queued / fail.
 #    To turn off device runs on push only, set variable SKIP_DEVICE_E2E_ON_PUSH=true.
 
@@ -173,63 +174,15 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Require adb and authorized device
+      - name: Run TestNG suite on device (Unix)
+        if: runner.os != 'Windows'
         shell: bash
-        run: |
-          set -euo pipefail
-          command -v adb >/dev/null 2>&1 || { echo "::error::adb not found on PATH. Install Android platform-tools on the self-hosted runner."; exit 1; }
-          adb start-server
-          echo "adb devices:"
-          adb devices
-          if ! adb devices | grep -q $'\tdevice'; then
-            echo "::error::No Android device in 'device' state. Enable USB debugging, authorize RSA, and keep the phone connected."
-            exit 1
-          fi
+        run: bash scripts/run-appium-device-e2e.sh
 
-      - name: Ensure Appium CLI and UiAutomator2 driver
-        shell: bash
-        run: |
-          set -euo pipefail
-          npm i -g appium@latest
-          appium -v
-          if ! appium driver list --installed | grep -q uiautomator2; then
-            appium driver install uiautomator2
-          fi
-
-      - name: Start Appium if not already listening
-        shell: bash
-        run: |
-          set -euo pipefail
-          BASE="${APPIUM_BASE_PATH:-/wd/hub}"
-          PORT="${APPIUM_PORT:-4723}"
-          STATUS_URL="http://127.0.0.1:${PORT}${BASE}/status"
-          if curl -fsS "$STATUS_URL" >/dev/null 2>&1; then
-            echo "Appium already listening at $STATUS_URL"
-            exit 0
-          fi
-          echo "Starting Appium (port $PORT, base-path $BASE) ..."
-          # Match java client default http://127.0.0.1:4723/wd/hub (BaseClass)
-          if appium server --help >/dev/null 2>&1; then
-            nohup appium server --address 127.0.0.1 --port "$PORT" --base-path "$BASE" > appium.log 2>&1 &
-          else
-            nohup appium --base-path "$BASE" > appium.log 2>&1 &
-          fi
-          for i in $(seq 1 30); do
-            if curl -fsS "$STATUS_URL" >/dev/null 2>&1; then
-              echo "Appium is ready."
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "::error::Appium did not become ready at $STATUS_URL (see appium.log)."
-          tail -n 80 appium.log || true
-          exit 1
-
-      - name: Run TestNG suite (testng.xml)
-        shell: bash
-        run: |
-          set -euo pipefail
-          mvn -B -f appiumtests/pom.xml test -Dsurefire.suiteXmlFiles="${TESTNG_SUITE}"
+      - name: Run TestNG suite on device (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./scripts/run-appium-device-e2e.ps1
 
       - name: Upload artifacts
         if: always()
