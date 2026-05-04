@@ -20,7 +20,7 @@ if ([string]::IsNullOrWhiteSpace($env:APPIUM_UDID)) {
     if ($env:GITHUB_ENV) {
         "APPIUM_UDID=$udid" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
     }
-    Write-Host "APPIUM_UDID not set — using first device: $udid"
+    Write-Host "APPIUM_UDID not set - using first device: $udid"
 }
 
 $port = if ($env:APPIUM_PORT) { $env:APPIUM_PORT } else { '4723' }
@@ -39,7 +39,6 @@ if (-not $appiumUp) {
     appium -v
     appium driver install uiautomator2 2>$null
     $logPath = Join-Path $Root 'appium.log'
-    # Resolve appium.cmd from npm global (Start-Process 'appium' alone is unreliable on Windows)
     $appiumCmd = (Get-Command appium.cmd -ErrorAction SilentlyContinue).Source
     if (-not $appiumCmd) { $appiumCmd = (Get-Command appium -ErrorAction SilentlyContinue).Source }
     if (-not $appiumCmd) { throw 'appium CLI not found after npm i -g appium' }
@@ -64,4 +63,6 @@ if (-not $appiumUp) {
 $suite = if ($env:TESTNG_SUITE) { $env:TESTNG_SUITE } else { 'testng.xml' }
 Write-Host "APPIUM_UDID=$($env:APPIUM_UDID)"
 Write-Host "Running mvn test with suite: $suite (root: $Root)"
-& mvn -B "-f" (Join-Path $Root 'appiumtests\pom.xml') test "-Dsurefire.suiteXmlFiles=$suite"
+$pom = Join-Path $Root 'appiumtests\pom.xml'
+$mvnSuiteArg = '-Dsurefire.suiteXmlFiles=' + $suite
+& mvn -B -f $pom test $mvnSuiteArg

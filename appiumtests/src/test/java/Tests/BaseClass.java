@@ -122,6 +122,9 @@ public class BaseClass {
                 cap.setCapability("noReset", false);
                 cap.setCapability("fullReset", false);
                 cap.setCapability("automationName", "UiAutomator2");
+                // Improves typing with on-screen keyboards (IME); reset restores user keyboard after session.
+                cap.setCapability("unicodeKeyboard", true);
+                cap.setCapability("resetKeyboard", true);
                 cap.setCapability("adbExecTimeout", 180000);
                 cap.setCapability("uiautomator2ServerLaunchTimeout", 90000);
                 cap.setCapability("uiautomator2ServerInstallTimeout", 90000);
