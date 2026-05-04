@@ -49,5 +49,6 @@ else
 fi
 
 SUITE="${TESTNG_SUITE:-testng.xml}"
-echo "Running mvn test with suite: $SUITE"
+echo "APPIUM_UDID=${APPIUM_UDID:-}"
+echo "Running mvn test with suite: $SUITE (cwd: $ROOT)"
 mvn -B -f appiumtests/pom.xml test -Dsurefire.suiteXmlFiles="$SUITE"

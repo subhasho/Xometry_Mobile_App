@@ -1,6 +1,7 @@
 # Mobile E2E (Appium + TestNG)
 #
-# testng.xml (Tests.Tests + Tests.OPC) needs a real Android session: ADB device + Appium.
+# testng.xml uses listener Tests.AppiumSuiteListener so one Appium session spans Tests + OPC.
+# (Per-class @BeforeSuite/@AfterSuite on BaseClass would tear down the driver between classes.)
 # GitHub-hosted ubuntu-latest cannot attach a USB phone, so that job only runs tests when
 # a device is accidentally present (almost never).
 #

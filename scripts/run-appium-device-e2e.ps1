@@ -15,8 +15,11 @@ if (-not $deviceLine) { throw "No device in 'device' state. Enable USB debugging
 
 if ([string]::IsNullOrWhiteSpace($env:APPIUM_UDID)) {
     $udid = ($deviceLine -split "`t")[0].Trim()
+    if (-not $udid) { $udid = ($deviceLine -split '\s+')[0].Trim() }
     $env:APPIUM_UDID = $udid
-    "APPIUM_UDID=$udid" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+    if ($env:GITHUB_ENV) {
+        "APPIUM_UDID=$udid" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+    }
     Write-Host "APPIUM_UDID not set — using first device: $udid"
 }
 
@@ -59,5 +62,6 @@ if (-not $appiumUp) {
 }
 
 $suite = if ($env:TESTNG_SUITE) { $env:TESTNG_SUITE } else { 'testng.xml' }
-Write-Host "Running mvn test with suite: $suite"
+Write-Host "APPIUM_UDID=$($env:APPIUM_UDID)"
+Write-Host "Running mvn test with suite: $suite (root: $Root)"
 & mvn -B "-f" (Join-Path $Root 'appiumtests\pom.xml') test "-Dsurefire.suiteXmlFiles=$suite"

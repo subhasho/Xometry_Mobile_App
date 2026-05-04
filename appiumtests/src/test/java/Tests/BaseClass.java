@@ -1,6 +1,9 @@
 package Tests;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -11,7 +14,8 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.ITestResult;
-import org.testng.annotations.*;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 
 import io.appium.java_client.AppiumDriver;
 import io.appium.java_client.MobileBy;
@@ -25,21 +29,94 @@ public class BaseClass {
     private static boolean isDriverStarted = false;
     private static long lastCommandTime = System.currentTimeMillis();
 
-    // ✅ Start Appium driver once before the entire suite
-    @BeforeSuite(alwaysRun = true)
-    public void setup() {
-        startDriver();
+    /**
+     * Called from {@link AppiumSuiteListener} once per suite (not per test class).
+     */
+    public static synchronized void createDriverOnce() {
+        if (isDriverStarted && driver != null) {
+            try {
+                if (driver.getSessionId() != null) {
+                    System.out.println("♻️ Appium driver already active");
+                    return;
+                }
+            } catch (Exception ignored) {
+                isDriverStarted = false;
+                driver = null;
+            }
+        }
+        startDriverInternal();
     }
 
-    // ✅ Initialize driver (launch app only once)
-    private void startDriver() {
+    public static synchronized void quitDriverOnce() {
         try {
-            if (!isDriverStarted) { // ✅ Launch only once
+            if (driver != null) {
+                System.out.println("✅ Closing Appium driver after suite...");
+                driver.quit();
+            }
+        } catch (Exception e) {
+            System.out.println("⚠️ Error while closing driver: " + e.getMessage());
+        } finally {
+            driver = null;
+            isDriverStarted = false;
+        }
+    }
+
+    /** First serial with state {@code device} from {@code adb devices}, or null. */
+    static String firstAuthorizedDeviceFromAdb() {
+        try {
+            Process proc = new ProcessBuilder("adb", "devices")
+                .redirectErrorStream(true)
+                .start();
+            String line;
+            try (BufferedReader r = new BufferedReader(
+                new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8))) {
+                while ((line = r.readLine()) != null) {
+                    line = line.trim();
+                    if (line.isEmpty() || line.startsWith("List of")) {
+                        continue;
+                    }
+                    String[] parts = line.split("\\s+");
+                    if (parts.length >= 2 && "device".equals(parts[1])) {
+                        return parts[0];
+                    }
+                }
+            }
+            proc.waitFor(15, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            System.err.println("Could not read adb devices: " + e.getMessage());
+        }
+        return null;
+    }
+
+    private static void startDriverInternal() {
+        if (driver == null) {
+            isDriverStarted = false;
+        }
+        try {
+            if (!isDriverStarted) {
                 DesiredCapabilities cap = new DesiredCapabilities();
-                cap.setCapability("deviceName", System.getenv().getOrDefault("APPIUM_DEVICE_NAME", "vivo 1916"));
-                cap.setCapability("udid", System.getenv().getOrDefault("APPIUM_UDID", "6609da97"));
+                String udid = System.getenv("APPIUM_UDID");
+                if (udid == null || udid.isBlank()) {
+                    udid = firstAuthorizedDeviceFromAdb();
+                }
+                if (udid == null || udid.isBlank()) {
+                    throw new RuntimeException(
+                        "No device UDID: set env APPIUM_UDID or connect one USB device with adb authorized (adb devices).");
+                }
+                cap.setCapability("udid", udid.trim());
+
+                String deviceName = System.getenv("APPIUM_DEVICE_NAME");
+                if (deviceName == null || deviceName.isBlank()) {
+                    deviceName = udid;
+                }
+                cap.setCapability("deviceName", deviceName);
+
                 cap.setCapability("platformName", System.getenv().getOrDefault("APPIUM_PLATFORM_NAME", "Android"));
-                cap.setCapability("platformVersion", System.getenv().getOrDefault("APPIUM_PLATFORM_VERSION", "9"));
+                String platVer = System.getenv("APPIUM_PLATFORM_VERSION");
+                if (platVer != null && !platVer.isBlank()) {
+                    cap.setCapability("platformVersion", platVer);
+                }
+
                 cap.setCapability("appPackage", "com.xometry.workcenter.preview.stage");
                 cap.setCapability("appActivity", "com.xometry.workcenter.preview.stage.MainActivity");
                 cap.setCapability("noReset", false);
@@ -49,6 +126,7 @@ public class BaseClass {
                 cap.setCapability("uiautomator2ServerLaunchTimeout", 90000);
                 cap.setCapability("uiautomator2ServerInstallTimeout", 90000);
                 cap.setCapability("newCommandTimeout", 1200);
+
                 String apkPathEnv = System.getenv("APK_PATH");
                 if (apkPathEnv != null && !apkPathEnv.isEmpty()) {
                     Path apkUser = Paths.get(apkPathEnv);
@@ -77,7 +155,7 @@ public class BaseClass {
                 driver.manage().timeouts().implicitlyWait(15, TimeUnit.SECONDS);
 
                 isDriverStarted = true;
-                System.out.println("✅ Appium driver started successfully (only once)");
+                System.out.println("✅ Appium driver started (udid=" + udid + ", url=" + appiumUrl + ")");
             } else {
                 System.out.println("♻️ Reusing existing Appium driver session");
             }
@@ -87,23 +165,24 @@ public class BaseClass {
             isDriverStarted = false;
             driver = null;
             throw new RuntimeException(
-                "Appium driver failed to start. Check APPIUM_URL, APPIUM_UDID, Appium server, and APK_PATH.",
+                "Appium driver failed to start. Check APPIUM_URL, device in adb devices, Appium server, and APK_PATH.",
                 e);
         }
     }
 
-
-    // ✅ Just verify driver session (don’t restart app)
     @BeforeMethod(alwaysRun = true)
     public void ensureAppSessionAlive() {
         try {
             if (driver == null || driver.getSessionId() == null) {
-                System.out.println("⚠️ Driver session lost — restarting driver...");
-                startDriver();
+                System.out.println("⚠️ Driver session lost — recreating driver...");
+                synchronized (BaseClass.class) {
+                    isDriverStarted = false;
+                    startDriverInternal();
+                }
             } else {
                 long now = System.currentTimeMillis();
                 if ((now - lastCommandTime) > 120000) {
-                    driver.getPageSource(); // keep session alive
+                    driver.getPageSource();
                     lastCommandTime = now;
                     System.out.println("🔄 Session kept alive");
                 }
@@ -115,21 +194,6 @@ public class BaseClass {
         }
     }
 
-    // ✅ Close driver once after all tests are complete
-    @AfterSuite(alwaysRun = true)
-    public void teardown() {
-        try {
-            if (driver != null) {
-                System.out.println("✅ Closing Appium driver after all tests...");
-                driver.quit();
-                driver = null;
-            }
-        } catch (Exception e) {
-            System.out.println("⚠️ Error while closing driver: " + e.getMessage());
-        }
-    }
-
-    // ✅ Capture screenshot on test failure
     @AfterMethod(alwaysRun = true)
     public void captureOnFailure(ITestResult result) {
         try {
@@ -142,13 +206,11 @@ public class BaseClass {
         }
     }
 
-    // ✅ Utility: wait for element visibility
     public MobileElement waitForElement(By locator, int timeout) {
         WebDriverWait wait = new WebDriverWait(driver, timeout);
         return (MobileElement) wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
     }
 
-    // ✅ Handle runtime "Allow" popup
     public void handleOpenAppPopup() {
         try {
             WebDriverWait wait = new WebDriverWait(driver, 5);
@@ -164,7 +226,6 @@ public class BaseClass {
         }
     }
 
-    // ✅ Utility: check if driver is still valid
     public boolean isAppRunning() {
         try {
             return driver != null && driver.getSessionId() != null;
