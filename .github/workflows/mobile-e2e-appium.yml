@@ -1,11 +1,10 @@
 # Mobile E2E (Appium + TestNG)
 #
-# Every push to main, and every pull_request targeting main, runs testng.xml here (GitHub-hosted jobs):
+# Every push to main runs testng.xml here:
 # 1) appium-emulator-e2e — Android emulator + Appium + mvn testng.xml (unless skipped).
 #    Add repository secret APPIUM_E2E_APK_URL = direct URL to the stage .apk so the app installs on the AVD.
-#    Set SKIP_EMULATOR_E2E_ON_PUSH=true to disable this job on push and pull_request.
-#    Fork PRs: secrets are not available unless the org enables them; the job may fail without APK_URL.
-# 2) appium-self-hosted-device — USB phone; runs on push to main + workflow_dispatch only (not on pull_request).
+#    Set SKIP_EMULATOR_E2E_ON_PUSH=true to disable this job on push.
+# 2) appium-self-hosted-device — USB phone on YOUR self-hosted runner; runs on every push to main + workflow_dispatch.
 #    Set SKIP_DEVICE_E2E_ON_PUSH=true to skip this job on push only (manual Run workflow still runs it).
 #    If the runner is offline, this job will Queue until a runner is available or the run is cancelled.
 # 3) appium-ubuntu-smoke — quick ubuntu checks (runs testng.xml only if a device appears on the runner).
@@ -17,11 +16,9 @@ name: Mobile E2E (Appium)
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
-# Latest run wins per ref: cancel older runs for the same branch/PR merge ref. Manual uses a separate group.
+# Latest run wins per ref on main (or manual group). cancel-in-progress avoids piling Queued push runs.
 concurrency:
   group: mobile-e2e-appium-${{ github.ref }}-${{ github.event_name == 'workflow_dispatch' && 'manual' || 'ci' }}
   cancel-in-progress: true
@@ -144,7 +141,7 @@ jobs:
             appiumtests/Screenshots/**
 
   # ---------------------------------------------------------------------------
-  # GitHub-hosted Android emulator — runs testng.xml on push + pull_request to main (no self-hosted runner).
+  # GitHub-hosted Android emulator — runs testng.xml on every push to main (no self-hosted runner).
   # ---------------------------------------------------------------------------
   appium-emulator-e2e:
     name: Appium E2E (Android emulator + testng.xml)

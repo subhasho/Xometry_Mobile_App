@@ -37,7 +37,7 @@ Labels: default label is **`self-hosted`**. The workflow uses `runs-on: self-hos
 
 | Variable | Purpose |
 |----------|---------|
-| `SKIP_EMULATOR_E2E_ON_PUSH` | Set to `true` to **skip** **`appium-emulator-e2e`** on **push** and **pull_request** to `main`. |
+| `SKIP_EMULATOR_E2E_ON_PUSH` | Set to `true` to **skip** **`appium-emulator-e2e`** on **push** to `main`. |
 | `SKIP_DEVICE_E2E_ON_PUSH` | Set to `true` to **skip** **`appium-self-hosted-device`** on push (manual **Run workflow** still runs it). |
 | `APPIUM_UDID` | From `adb devices` (optional if only one device) |
 | `APPIUM_PLATFORM_VERSION` | Android version of the phone |
@@ -57,11 +57,12 @@ Either:
 
 ## 7. Run the job
 
-**`testng.xml` on every push or PR to `main` (without USB):** **`appium-emulator-e2e`** and **`appium-ubuntu-smoke`** run on **push** and on **pull_request** targeting **`main`** (same `testng.xml` via Maven). Set secret **`APPIUM_E2E_APK_URL`** to a direct `.apk` URL so the emulator can install the app. **Fork PRs** usually do not receive repository secrets unless your org allows it; those runs may fail at install unless the workflow is adjusted.
+**`testng.xml` on every push to `main` (without USB):** **`appium-emulator-e2e`** and **`appium-ubuntu-smoke`** run on **push** (same `testng.xml` via Maven). Set secret **`APPIUM_E2E_APK_URL`** to a direct `.apk` URL so the emulator can install the app.
 
 **`appium-self-hosted-device` (real phone):**
 
-- **Default:** runs on **every push** to `main` **and** on **Actions → Run workflow**. Your self-hosted runner must be **online** with USB debugging, or the job will **Queue**.  
+- **Default:** runs on **every push** to `main` **and** on **Actions → Run workflow**. This workflow does **not** use **`pull_request`**; only **pushes** to `main` (and manual runs) start Actions here.  
+- Your self-hosted runner must be **online** with the phone on USB (`adb devices` → **`device`** on that PC), or the job stays **Queued** and nothing runs on the phone.  
 - **Optional:** set **`SKIP_DEVICE_E2E_ON_PUSH=true`** to stop scheduling this job on **push** only (manual runs still execute it).
 
 1. Put your self-hosted runner **online** (see below).  
