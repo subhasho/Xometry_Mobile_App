@@ -31,6 +31,25 @@ Use the machine that stays on while you work (or a small always-on box). Plug th
 
 Labels: default label is **`self-hosted`**. The workflow uses `runs-on: self-hosted`, so any runner with that label in this repo can pick the job.
 
+### Why GitHub shows the runner as **offline**
+
+GitHub marks a self-hosted runner **offline** when the **runner agent** is not connected—usually because:
+
+- **`.\run.cmd`** was started in a **terminal** and the window was **closed**, or the user **signed out** (interactive mode stops when the session ends).
+- The PC **restarted**, **shut down**, **slept**, or **hibernated**.
+- The runner process **crashed** or was **killed** and was not restarted.
+
+### Keep the runner **online** as much as possible (recommended)
+
+You cannot force “always online” from GitHub’s website alone; the **PC must run the agent** (or a **Windows/Linux service** that runs it).
+
+1. **Install the runner as a service** (best for “always on”): during **configure**, choose **Run as a service** (Windows), or on Linux use **systemd**. Official steps: [Configuring the self-hosted runner application as a service](https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/configuring-the-self-hosted-runner-application-as-a-service).
+2. **Windows:** open **`services.msc`** → find **GitHub Actions Runner …** → set **Startup type** to **Automatic** → **Start** if it is stopped.
+3. **Power:** disable **sleep** / **hibernate** on AC power for that PC so it does not drop the connection overnight.
+4. If you only used **`.\run.cmd`** once and never installed a service, either **reconfigure** with “run as service” or follow GitHub’s docs to **install the existing runner as a service** for your OS.
+
+GitHub will still show **offline** if the machine is off or has no network—there is no cloud switch to override that.
+
 ## 5. Optional repository variables
 
 **Settings → Secrets and variables → Actions → Variables** (names used by `BaseClass`):
