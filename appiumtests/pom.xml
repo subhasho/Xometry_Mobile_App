@@ -92,9 +92,11 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
                 <configuration>
+                    <!-- Only classes/tests listed in this file run (Surefire TestNG + suite XML). -->
                     <suiteXmlFiles>
                         <suiteXmlFile>testng.xml</suiteXmlFile>
                     </suiteXmlFiles>
+                    <!-- Do not use -Dtest= / -Dinclude= with this project; that can bypass or fight the suite. -->
                     <!-- Show full test output in the terminal (no buffering to file only). -->
                     <trimStackTrace>false</trimStackTrace>
                     <redirectTestOutputToFile>false</redirectTestOutputToFile>
