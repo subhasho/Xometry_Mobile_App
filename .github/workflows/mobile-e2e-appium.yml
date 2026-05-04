@@ -1,14 +1,14 @@
 # Mobile E2E (Appium + TestNG)
 #
-# Device job "appium-self-hosted-device" runs on every push to main (and workflow_dispatch) unless
-# you set repo variable SKIP_DEVICE_E2E_ON_PUSH=true. It requires a self-hosted runner + USB phone;
-# if none is online the job stays Queued until a runner appears or the job times out (120m).
+# Every push to main runs:
+# 1) appium-emulator-e2e — GitHub-hosted Android emulator + Appium + mvn testng.xml (no USB phone).
+#    Add repository secret APPIUM_E2E_APK_URL = direct URL to the stage .apk so the app installs on the AVD.
+#    Set SKIP_EMULATOR_E2E_ON_PUSH=true to disable this job.
+# 2) appium-self-hosted-device — your USB phone, only when a self-hosted runner is online (may Queue).
+#    Set SKIP_DEVICE_E2E_ON_PUSH=true to disable on push.
+# 3) appium-ubuntu-smoke — quick ubuntu checks (rarely has a device).
 #
-# testng.xml uses listener Tests.AppiumSuiteListener so one Appium session spans Tests + OPC.
-# Tests use alwaysRun=true so methods still execute after an earlier failure (maximize device coverage).
-#
-# Self-hosted: USB "device", Java 17, Maven, Node, Appium + uiautomator2, runner always on.
-# Optional vars: APPIUM_UDID, APPIUM_PLATFORM_VERSION, APK_PATH.
+# testng.xml: Tests.AppiumSuiteListener + alwaysRun on dependent tests.
 
 name: Mobile E2E (Appium)
 
@@ -135,6 +135,56 @@ jobs:
             appiumtests/Screenshots/**
 
   # ---------------------------------------------------------------------------
+  # GitHub-hosted Android emulator — runs testng.xml on EVERY push (no self-hosted runner).
+  # ---------------------------------------------------------------------------
+  appium-emulator-e2e:
+    name: Appium E2E (Android emulator + testng.xml)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    if: ${{ vars.SKIP_EMULATOR_E2E_ON_PUSH != 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Maven and curl
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y maven curl
+
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: bash scripts/ci-emulator-e2e.sh
+        env:
+          APK_URL: ${{ secrets.APPIUM_E2E_APK_URL }}
+          TESTNG_SUITE: ${{ env.TESTNG_SUITE }}
+
+      - name: Upload emulator artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: appium-artifacts-emulator
+          path: |
+            appium.log
+            appiumtests/test-output/**
+            appiumtests/Screenshots/**
+            appiumtests/target/surefire-reports/**
+
+  # ---------------------------------------------------------------------------
   # Self-hosted PC with USB device — this is how you run full testng.xml on a real phone.
   # ---------------------------------------------------------------------------
   appium-self-hosted-device:
@@ -189,8 +239,9 @@ jobs:
 
       - name: Run TestNG suite on device (Windows)
         if: runner.os == 'Windows'
-        shell: pwsh
-        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./scripts/run-appium-device-e2e.ps1
+        shell: powershell
+        run: |
+          & powershell -NoProfile -ExecutionPolicy Bypass -File "$env:GITHUB_WORKSPACE\scripts\run-appium-device-e2e.ps1"
 
       - name: Upload artifacts
         if: always()
