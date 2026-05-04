@@ -55,16 +55,18 @@ Either:
 
 ## 7. Run the job
 
-- **Push to `main`** (job runs unless **`SKIP_DEVICE_E2E_ON_PUSH`** is `true`), or  
-- **Actions → Mobile E2E (Appium) → Run workflow**.
+The **`appium-self-hosted-device`** job is **manual only** (it does **not** run on push to `main`), so routine pushes never sit **Queued** waiting for a self-hosted runner.
+
+1. Put your self-hosted runner **online** (see below).  
+2. **Actions → Mobile E2E (Appium) → Run workflow** → choose branch → **Run workflow**.
 
 Open the run → job **`appium-self-hosted-device`** → logs. On success, download artifact **`appium-artifacts-self-hosted`**.
 
 ### Job stuck on “Queued”?
 
-GitHub only runs **`runs-on: self-hosted`** jobs when a **runner for this repo is online**. If the PC is off, the runner process was closed, or the Windows service is stopped, the job waits (often until timeout).
+That only happens if you **manually** started the workflow while no runner is online. GitHub runs **`runs-on: self-hosted`** only when a runner for this repo is available.
 
-1. Repo **Settings → Actions → Runners** — each runner should show **Idle** or **Active** (not offline).  
+1. Repo **Settings → Actions → Runners** — the runner should show **Idle** or **Active** (not offline).  
 2. On the runner PC: open the install folder (e.g. `actions-runner`) and run **`.\run.cmd`**, or start the **GitHub Actions Runner** service.  
 3. From repo root, with [GitHub CLI](https://cli.github.com/) logged in:  
    `powershell -File scripts\validate-self-hosted-prereqs.ps1`  

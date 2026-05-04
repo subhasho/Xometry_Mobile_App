@@ -4,8 +4,8 @@
 # 1) appium-emulator-e2e — GitHub-hosted Android emulator + Appium + mvn testng.xml (no USB phone).
 #    Add repository secret APPIUM_E2E_APK_URL = direct URL to the stage .apk so the app installs on the AVD.
 #    Set SKIP_EMULATOR_E2E_ON_PUSH=true to disable this job.
-# 2) appium-self-hosted-device — your USB phone, only when a self-hosted runner is online (may Queue).
-#    Set SKIP_DEVICE_E2E_ON_PUSH=true to disable on push.
+# 2) appium-self-hosted-device — USB phone on YOUR self-hosted runner only (workflow_dispatch).
+#    Not scheduled on push, so the workflow never sits Queued waiting for an offline runner.
 # 3) appium-ubuntu-smoke — quick ubuntu checks (rarely has a device).
 #
 # testng.xml: Tests.AppiumSuiteListener + alwaysRun on dependent tests.
@@ -191,9 +191,8 @@ jobs:
     name: Appium E2E (self-hosted + device, testng.xml)
     runs-on: self-hosted
     timeout-minutes: 120
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && vars.SKIP_DEVICE_E2E_ON_PUSH != 'true')
+    # Manual only: push never enqueues this job (avoids indefinite Queued when runner is offline).
+    if: github.event_name == 'workflow_dispatch'
     env:
       # Optional overrides for BaseClass (see appiumtests/src/test/java/Tests/BaseClass.java)
       APPIUM_UDID: ${{ vars.APPIUM_UDID }}
