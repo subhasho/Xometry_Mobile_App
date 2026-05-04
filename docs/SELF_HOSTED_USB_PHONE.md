@@ -81,3 +81,23 @@ From repo root:
 ```
 
 This runs the same `scripts/run-appium-device-e2e.ps1` flow against the connected device.
+
+## 9. End-to-end checklist (verify listener + driver)
+
+1. **Sync `main`** so you have `AppiumSuiteListener`, `testng.xml`, `BaseClass`, and `scripts/` (including `run-appium-device-e2e.sh` / `.ps1`).
+
+2. **On the machine with the phone**, run `adb devices` — the device line must end with **`device`** (not `unauthorized` or `offline`).
+
+3. **Run the suite** in one of these ways:
+   - **GitHub:** self-hosted runner online → **Actions → Mobile E2E (Appium) → Run workflow** → open job **`appium-self-hosted-device`** logs.  
+   - **Linux/macOS (local):** from repo root, `bash scripts/run-appium-device-e2e.sh`  
+   - **Windows (local):** from repo root, `.\run-testng-device.ps1` or  
+     `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\run-appium-device-e2e.ps1`
+
+4. **In the Maven / TestNG log**, confirm these lines appear **before** individual `@Test` methods run:
+   - `>>> AppiumSuiteListener.onStart suite=` …  
+   - `✅ Appium driver started (udid=` … (or `♻️ Reusing existing Appium driver session` if a session was already up)
+
+   `AppiumSuiteListener` calls `BaseClass.createDriverOnce()` from `onStart`, so if you see `onStart` but no driver line, the failure is inside driver creation (Appium URL, capabilities, `adb`, etc.).
+
+5. **If something still fails**, capture the **first stack trace** in the Maven/TestNG output that appears **after** `>>> AppiumSuiteListener.onStart` and share that (or the Surefire report under `appiumtests/target/surefire-reports/`).
