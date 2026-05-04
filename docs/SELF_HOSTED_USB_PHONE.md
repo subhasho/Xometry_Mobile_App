@@ -100,6 +100,15 @@ From repo root:
 
 This runs the same `scripts/run-appium-device-e2e.ps1` flow against the connected device.
 
+### Full `testng.xml` on a real device (all tests in the suite)
+
+`appiumtests/testng.xml` is the single suite Maven uses (`surefire.suiteXmlFiles`). On a **real device** it runs **every `@Test` in the classes listed there** — currently **`Tests.Tests`** then **`Tests.OPC`**, one Appium session for the whole suite (`AppiumSuiteListener` + `BaseClass`).
+
+- **Local (this PC + USB):** repo root → `.\run-testng-device.ps1` (Windows) or `bash scripts/run-appium-device-e2e.sh` (Unix). Same command line CI uses for the device job.  
+- **CI:** job **`appium-self-hosted-device`** (push to `main` or **Run workflow**), runner on the same machine as the phone, **`SKIP_DEVICE_E2E_ON_PUSH`** not set to `true` on push.
+
+Other classes under `src/test/java/Tests/` (for example `Job_Board`, `Job_Management`) are **not** in `testng.xml` by default — they reuse similar priorities to `Tests` and would need a **separate** suite file or refactored priorities before being combined safely.
+
 ## 9. End-to-end checklist (verify listener + driver)
 
 1. **Sync `main`** so you have `AppiumSuiteListener`, `testng.xml`, `BaseClass`, and `scripts/` (including `run-appium-device-e2e.sh` / `.ps1`).

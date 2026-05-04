@@ -4,7 +4,7 @@
   <listeners>
     <listener class-name="Tests.AppiumSuiteListener"/>
   </listeners>
-  <!-- Job_Board / Job_Management before OPC so post-login UI is still on home (OPC navigates deep e.g. Inbox). -->
+  <!-- Real-device E2E: Tests (login + job board) then OPC. Other test classes stay out of this suite unless priorities/groups are refactored. -->
   <test name="TestRun">
     <classes>
         <class name="Tests.Tests"/>
