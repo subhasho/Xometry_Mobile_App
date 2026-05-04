@@ -37,6 +37,7 @@ Labels: default label is **`self-hosted`**. The workflow uses `runs-on: self-hos
 
 | Variable | Purpose |
 |----------|---------|
+| `SKIP_EMULATOR_E2E_ON_PUSH` | Set to `true` to **skip** **`appium-emulator-e2e`** on **push** and **pull_request** to `main`. |
 | `SKIP_DEVICE_E2E_ON_PUSH` | Set to `true` to **skip** **`appium-self-hosted-device`** on push (manual **Run workflow** still runs it). |
 | `APPIUM_UDID` | From `adb devices` (optional if only one device) |
 | `APPIUM_PLATFORM_VERSION` | Android version of the phone |
@@ -56,7 +57,7 @@ Either:
 
 ## 7. Run the job
 
-**`testng.xml` on every push to `main` (without USB):** the workflow job **`appium-emulator-e2e`** already runs **`mvn … testng.xml`** on a GitHub-hosted Android emulator (see `.github/workflows/mobile-e2e-appium.yml`). Set secret **`APPIUM_E2E_APK_URL`** to a direct `.apk` URL so the app installs on the AVD.
+**`testng.xml` on every push or PR to `main` (without USB):** **`appium-emulator-e2e`** and **`appium-ubuntu-smoke`** run on **push** and on **pull_request** targeting **`main`** (same `testng.xml` via Maven). Set secret **`APPIUM_E2E_APK_URL`** to a direct `.apk` URL so the emulator can install the app. **Fork PRs** usually do not receive repository secrets unless your org allows it; those runs may fail at install unless the workflow is adjusted.
 
 **`appium-self-hosted-device` (real phone):**
 
