@@ -1,16 +1,14 @@
 # Mobile E2E (Appium + TestNG)
 #
-# Queued self-hosted jobs: GitHub cannot attach your USB phone to ubuntu-latest. If we scheduled
-# the device job on every push, the job would sit "Queued" forever whenever no self-hosted runner
-# was online — cluttering Actions. So:
-# - Push to main: only "appium-ubuntu-smoke" runs (GitHub-hosted, no queue for a missing phone PC).
-# - Device job runs on workflow_dispatch (Actions → Run workflow) OR on push when you opt in by
-#   setting repo variable RUN_DEVICE_E2E_ON_PUSH=true (and your self-hosted runner is online).
+# Device job "appium-self-hosted-device" runs on every push to main (and workflow_dispatch) unless
+# you set repo variable SKIP_DEVICE_E2E_ON_PUSH=true. It requires a self-hosted runner + USB phone;
+# if none is online the job stays Queued until a runner appears or the job times out (120m).
 #
 # testng.xml uses listener Tests.AppiumSuiteListener so one Appium session spans Tests + OPC.
+# Tests use alwaysRun=true so methods still execute after an earlier failure (maximize device coverage).
 #
-# Self-hosted setup: USB debugging, adb "device", Java 17, Maven, Node, Appium + uiautomator2,
-# self-hosted runner always running. Optional vars: APPIUM_UDID, APPIUM_PLATFORM_VERSION, APK_PATH.
+# Self-hosted: USB "device", Java 17, Maven, Node, Appium + uiautomator2, runner always on.
+# Optional vars: APPIUM_UDID, APPIUM_PLATFORM_VERSION, APK_PATH.
 
 name: Mobile E2E (Appium)
 
@@ -145,7 +143,7 @@ jobs:
     timeout-minutes: 120
     if: |
       github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && vars.RUN_DEVICE_E2E_ON_PUSH == 'true')
+      (github.event_name == 'push' && vars.SKIP_DEVICE_E2E_ON_PUSH != 'true')
     env:
       # Optional overrides for BaseClass (see appiumtests/src/test/java/Tests/BaseClass.java)
       APPIUM_UDID: ${{ vars.APPIUM_UDID }}

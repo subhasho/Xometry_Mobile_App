@@ -29,21 +29,21 @@ public class Tests extends BaseClass {
         System.out.println("completed Testone..");
     }
 
-    @Test(priority = 2, dependsOnMethods = {"testone"}, retryAnalyzer = RetryAnalyzer.class)
+    @Test(priority = 2, dependsOnMethods = {"testone"}, alwaysRun = true, retryAnalyzer = RetryAnalyzer.class)
     public void testtwo() {
         MobileElement emailField = driver.findElement(By.xpath("//android.widget.EditText"));
         emailField.sendKeys("gsage@sylvarant.com");
         System.out.println("completed Testtwo..");
     }
 
-    @Test(priority = 3, dependsOnMethods = {"testtwo"}, retryAnalyzer = RetryAnalyzer.class)
+    @Test(priority = 3, dependsOnMethods = {"testtwo"}, alwaysRun = true, retryAnalyzer = RetryAnalyzer.class)
     public void testthree() {
         MobileElement continueBtn = driver.findElement(By.xpath("//android.widget.Button[@text=\"Continue\"]"));
         continueBtn.click();
         System.out.println("completed Testthree..");
     }
 
-    @Test(priority = 4, dependsOnMethods = {"testthree"}, retryAnalyzer = RetryAnalyzer.class)
+    @Test(priority = 4, dependsOnMethods = {"testthree"}, alwaysRun = true, retryAnalyzer = RetryAnalyzer.class)
     public void testFour() throws InterruptedException {
         Thread.sleep(2000);
         AndroidDriver<MobileElement> ad = (AndroidDriver<MobileElement>) driver;
@@ -81,7 +81,7 @@ public class Tests extends BaseClass {
         }
         System.out.println("completed TestFour..");
     }
-    @Test(priority = 5, dependsOnMethods = {"testFour"}, retryAnalyzer = RetryAnalyzer.class)
+    @Test(priority = 5, dependsOnMethods = {"testFour"}, alwaysRun = true, retryAnalyzer = RetryAnalyzer.class)
     public void testFive() {
         WebDriverWait wait = new WebDriverWait(driver, 30);
         MobileElement continueBtn1 = (MobileElement) wait.until(
@@ -91,7 +91,7 @@ public class Tests extends BaseClass {
         System.out.println("completed TestFive..");
     }
 
-    @Test(priority = 6, groups = "login", dependsOnMethods = {"testFive"}, retryAnalyzer = RetryAnalyzer.class)
+    @Test(priority = 6, groups = "login", dependsOnMethods = {"testFive"}, alwaysRun = true, retryAnalyzer = RetryAnalyzer.class)
     public void testsix() throws InterruptedException {
         Thread.sleep(3000);
         handleOpenAppPopup(driver);
@@ -99,7 +99,7 @@ public class Tests extends BaseClass {
         System.out.println("completed Testsix..");
     }
 
-    @Test(priority = 7, dependsOnMethods = {"testsix"}, retryAnalyzer = RetryAnalyzer.class)
+    @Test(priority = 7, dependsOnMethods = {"testsix"}, alwaysRun = true, retryAnalyzer = RetryAnalyzer.class)
     public void testSeven() throws InterruptedException {
         Thread.sleep(8000);
         MobileElement jobBoardSection = driver.findElement(By.xpath(
@@ -109,7 +109,7 @@ public class Tests extends BaseClass {
         System.out.println("completed TestSeven..");
     }
 
-    @Test(priority = 8, dependsOnMethods = {"testSeven"}, retryAnalyzer = RetryAnalyzer.class)
+    @Test(priority = 8, dependsOnMethods = {"testSeven"}, alwaysRun = true, retryAnalyzer = RetryAnalyzer.class)
     public void testEight_ViewOfferDetails() throws InterruptedException {
         Thread.sleep(8000);
         AndroidDriver<MobileElement> ad = (AndroidDriver<MobileElement>) this.driver;
@@ -140,7 +140,7 @@ public class Tests extends BaseClass {
         Assert.fail("❌ 'View Offer Details' not found after scrolling");
     }
 
-    @Test(priority = 9, dependsOnMethods = {"testEight_ViewOfferDetails"}, retryAnalyzer = RetryAnalyzer.class)
+    @Test(priority = 9, dependsOnMethods = {"testEight_ViewOfferDetails"}, alwaysRun = true, retryAnalyzer = RetryAnalyzer.class)
     public void testNine_ProvideFeedback() throws InterruptedException {
         Thread.sleep(8000);
         WebDriverWait wait = new WebDriverWait(driver, 20);
@@ -153,7 +153,7 @@ public class Tests extends BaseClass {
         System.out.println("completed TestNine_ProvideFeedback..");
     }
 
-    @Test(priority = 10, dependsOnMethods = {"testNine_ProvideFeedback"}, retryAnalyzer = RetryAnalyzer.class)
+    @Test(priority = 10, dependsOnMethods = {"testNine_ProvideFeedback"}, alwaysRun = true, retryAnalyzer = RetryAnalyzer.class)
     public void testTen_JobManagement() throws InterruptedException {
         Thread.sleep(8000);
         MobileElement jobManagementSection = driver.findElement(By.xpath(
@@ -163,7 +163,7 @@ public class Tests extends BaseClass {
         System.out.println("completed TestTen_JobManagement..");
     }
 
-    @Test(priority = 11, dependsOnMethods = {"testTen_JobManagement"}, retryAnalyzer = RetryAnalyzer.class)
+    @Test(priority = 11, dependsOnMethods = {"testTen_JobManagement"}, alwaysRun = true, retryAnalyzer = RetryAnalyzer.class)
     public void testEleven_SearchJob() throws InterruptedException {
         Thread.sleep(8000);
         MobileElement searchJobs = driver.findElement(By.xpath("//android.widget.EditText[@text=\"Search Jobs\"]"));
@@ -172,7 +172,7 @@ public class Tests extends BaseClass {
         System.out.println("completed TestEleven_SearchJob..");
     }
 
-    @Test(priority = 12, dependsOnMethods = {"testEleven_SearchJob"}, retryAnalyzer = RetryAnalyzer.class)
+    @Test(priority = 12, dependsOnMethods = {"testEleven_SearchJob"}, alwaysRun = true, retryAnalyzer = RetryAnalyzer.class)
     public void testTwelve_ViewDetails() throws InterruptedException {
         Thread.sleep(8000);
         AndroidDriver<MobileElement> ad = (AndroidDriver<MobileElement>) this.driver;

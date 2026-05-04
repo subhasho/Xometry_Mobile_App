@@ -252,7 +252,7 @@ public class OPC extends BaseClass {
     private static final By ALL_EDITTEXTS =
         MobileBy.AndroidUIAutomator("new UiSelector().className(\"android.widget.EditText\")");
 
-    @Test(priority = 1, dependsOnGroups = "login", ignoreMissingDependencies = true)
+    @Test(priority = 1, dependsOnGroups = "login", ignoreMissingDependencies = true, alwaysRun = true)
     public void opc_JobManagement() {
 
         System.out.println("🚀 OPC Test 1 STARTED");
@@ -271,7 +271,7 @@ public class OPC extends BaseClass {
         System.out.println("✅ OPC Test 1 PASSED");
     }
 
-    @Test(priority = 2, dependsOnMethods = "opc_JobManagement")
+    @Test(priority = 2, dependsOnMethods = "opc_JobManagement", alwaysRun = true)
     public void opc_SearchJob() {
 
         System.out.println("🚀 OPC Test 2 STARTED");
@@ -290,7 +290,7 @@ public class OPC extends BaseClass {
         System.out.println("✅ OPC Test 2 PASSED");
     }
 
-    @Test(priority = 3, dependsOnMethods = "opc_SearchJob")
+    @Test(priority = 3, dependsOnMethods = "opc_SearchJob", alwaysRun = true)
     public void opc_ViewDetails() throws InterruptedException {
 
         System.out.println("🚀 OPC Test 3 STARTED");
@@ -337,7 +337,7 @@ public class OPC extends BaseClass {
         }
     }
 
-    @Test(priority = 4, dependsOnMethods = "opc_ViewDetails")
+    @Test(priority = 4, dependsOnMethods = "opc_ViewDetails", alwaysRun = true)
     public void opc_ContactUs() throws InterruptedException {
 
         System.out.println("🚀 OPC Test 4 STARTED");
@@ -390,7 +390,7 @@ public class OPC extends BaseClass {
         System.out.println("✅ OPC Test 4 PASSED");
     }
 
-    @Test(priority = 5, dependsOnMethods = "opc_ContactUs")
+    @Test(priority = 5, dependsOnMethods = "opc_ContactUs", alwaysRun = true)
     public void opc_ClickDropdown() {
 
         System.out.println("🚀 OPC Test 5 STARTED");
@@ -409,7 +409,7 @@ public class OPC extends BaseClass {
         System.out.println("✅ OPC Test 5 PASSED");
     }
 
-    @Test(priority = 6, dependsOnMethods = "opc_ClickDropdown")
+    @Test(priority = 6, dependsOnMethods = "opc_ClickDropdown", alwaysRun = true)
     public void opc_ClickCheckbox() throws InterruptedException {
 
         System.out.println("🚀 OPC Test 6 STARTED");
@@ -442,7 +442,7 @@ public class OPC extends BaseClass {
         }
     }
 
-    @Test(priority = 7, dependsOnMethods = "opc_ClickCheckbox")
+    @Test(priority = 7, dependsOnMethods = "opc_ClickCheckbox", alwaysRun = true)
     public void opc_SelectFirstOptionFromDropdown() throws InterruptedException {
 
         System.out.println("🚀 OPC Test 7 (Dropdown + Select First Option) STARTED");
@@ -493,7 +493,7 @@ public class OPC extends BaseClass {
         }
     }
 
-    @Test(priority = 8, dependsOnMethods = "opc_SelectFirstOptionFromDropdown")
+    @Test(priority = 8, dependsOnMethods = "opc_SelectFirstOptionFromDropdown", alwaysRun = true)
     public void opc_ScrollToStartConversation() throws InterruptedException {
 
         System.out.println("🚀 OPC Test 8 (scroll to Start Conversation) STARTED");
@@ -537,7 +537,7 @@ public class OPC extends BaseClass {
         Assert.fail("❌ Start Conversation not found after scrolling");
     }
 
-    @Test(priority = 9, dependsOnMethods = "opc_ScrollToStartConversation")
+    @Test(priority = 9, dependsOnMethods = "opc_ScrollToStartConversation", alwaysRun = true)
     public void opc_EnterTextInField() throws InterruptedException {
 
         System.out.println("🚀 OPC Test 9 (Enter Text) STARTED");
@@ -587,7 +587,7 @@ public class OPC extends BaseClass {
         }
     }
 
-    @Test(priority = 10, dependsOnMethods = "opc_EnterTextInField")
+    @Test(priority = 10, dependsOnMethods = "opc_EnterTextInField", alwaysRun = true)
     public void opc_ClickConsentCheckbox() throws InterruptedException {
 
         System.out.println("🚀 OPC Test 10 (Consent Checkbox Click) STARTED");
@@ -638,7 +638,7 @@ public class OPC extends BaseClass {
         }
     }
 
-    @Test(priority = 11, dependsOnMethods = "opc_ClickConsentCheckbox")
+    @Test(priority = 11, dependsOnMethods = "opc_ClickConsentCheckbox", alwaysRun = true)
     public void opc_ClickStartConversationAndVerifyInbox() throws InterruptedException {
 
         System.out.println("🚀 OPC Test 11 (Start Conversation + Verify Inbox) STARTED");
@@ -693,7 +693,7 @@ public class OPC extends BaseClass {
      * Runs after login when {@code Tests.Tests} is in the suite; with {@code testng-opc-only.xml} the {@code login}
      * group may be absent — {@code ignoreMissingDependencies} allows OPC-only runs (session must already be logged in).
      */
-    @Test(priority = 12, dependsOnGroups = "login", ignoreMissingDependencies = true)
+    @Test(priority = 12, dependsOnGroups = "login", ignoreMissingDependencies = true, alwaysRun = true)
     public void opc_ClickInboxConversationRow() throws InterruptedException {
 
         System.out.println("🚀 OPC Test 12 (Inbox — click conversation thread row) STARTED");
@@ -761,7 +761,7 @@ public class OPC extends BaseClass {
         }
     }
 
-    @Test(priority = 13, dependsOnMethods = "opc_ClickInboxConversationRow")
+    @Test(priority = 13, dependsOnMethods = "opc_ClickInboxConversationRow", alwaysRun = true)
     public void opc_ClickLinkIcon() throws InterruptedException {
 
         System.out.println("🚀 OPC Test 13 (Conversation — View files) STARTED");
@@ -833,7 +833,7 @@ public class OPC extends BaseClass {
         return null;
     }
 
-    @Test(priority = 14, dependsOnMethods = "opc_ClickLinkIcon")
+    @Test(priority = 14, dependsOnMethods = "opc_ClickLinkIcon", alwaysRun = true)
     public void opc_ClickJobIdTestJob() throws InterruptedException {
 
         System.out.println("🚀 OPC Test 14 (Job ID — click value after \"Job ID\" label) STARTED");
@@ -898,7 +898,7 @@ public class OPC extends BaseClass {
         }
     }
 
-    @Test(priority = 15, dependsOnMethods = "opc_ClickJobIdTestJob")
+    @Test(priority = 15, dependsOnMethods = "opc_ClickJobIdTestJob", alwaysRun = true)
     public void opc_ClickPlusIcon() throws InterruptedException {
 
         System.out.println("🚀 OPC Test 15 (Plus icon) STARTED");
@@ -930,7 +930,7 @@ public class OPC extends BaseClass {
     }
 
     /*
-    @Test(priority = 16, dependsOnMethods = "opc_ClickPlusIcon")
+    @Test(priority = 16, dependsOnMethods = "opc_ClickPlusIcon", alwaysRun = true)
     public void opc_AddFilesUploadFirstAndVerify() throws InterruptedException {
 
         System.out.println("🚀 OPC Test 16 (Add Files — pick first file on device, verify upload) STARTED");
@@ -963,7 +963,7 @@ public class OPC extends BaseClass {
     }
     */
 
-    @Test(priority = 17, dependsOnGroups = "login", ignoreMissingDependencies = true)
+    @Test(priority = 17, dependsOnGroups = "login", ignoreMissingDependencies = true, alwaysRun = true)
     public void opc_ClickAddParticipants() throws InterruptedException {
 
         System.out.println("🚀 OPC Test 17 (Add Participants) STARTED");
@@ -1009,7 +1009,7 @@ public class OPC extends BaseClass {
         }
     }
 
-    @Test(priority = 18, dependsOnGroups = "login", ignoreMissingDependencies = true)
+    @Test(priority = 18, dependsOnGroups = "login", ignoreMissingDependencies = true, alwaysRun = true)
     public void opc_ClickFirstParticipantCheckbox() throws InterruptedException {
 
         System.out.println("🚀 OPC Test 18 (Participant row — first checkbox) STARTED");
@@ -1040,7 +1040,7 @@ public class OPC extends BaseClass {
         }
     }
 
-    @Test(priority = 19, dependsOnGroups = "login", ignoreMissingDependencies = true)
+    @Test(priority = 19, dependsOnGroups = "login", ignoreMissingDependencies = true, alwaysRun = true)
     public void opc_ClickAddParticipantsViewGroup() throws InterruptedException {
 
         System.out.println("🚀 OPC Test 19 (Add Participants — ViewGroup button) STARTED");
@@ -1071,7 +1071,7 @@ public class OPC extends BaseClass {
         }
     }
 
-    @Test(priority = 20, dependsOnGroups = "login", ignoreMissingDependencies = true)
+    @Test(priority = 20, dependsOnGroups = "login", ignoreMissingDependencies = true, alwaysRun = true)
     public void opc_VerifyNewParticipantsAddedSuccessfully() throws InterruptedException {
 
         System.out.println("🚀 OPC Test 20 (Verify new participants added) STARTED");
@@ -1094,7 +1094,7 @@ public class OPC extends BaseClass {
         }
     }
 
-    @Test(priority = 21, dependsOnGroups = "login", ignoreMissingDependencies = true)
+    @Test(priority = 21, dependsOnGroups = "login", ignoreMissingDependencies = true, alwaysRun = true)
     public void opc_BoldTypeTestAndSendCaret() throws InterruptedException {
 
         System.out.println("🚀 OPC Test 21 (Bold — type TEST via keypad, caret send) STARTED");
@@ -1133,7 +1133,7 @@ public class OPC extends BaseClass {
         }
     }
 
-    @Test(priority = 22, dependsOnGroups = "login", ignoreMissingDependencies = true)
+    @Test(priority = 22, dependsOnGroups = "login", ignoreMissingDependencies = true, alwaysRun = true)
     public void opc_ItalicTypeTestAndSendCaret() throws InterruptedException {
 
         System.out.println("🚀 OPC Test 22 (Italic — type TEST via keypad, caret send) STARTED");
@@ -1172,7 +1172,7 @@ public class OPC extends BaseClass {
         }
     }
 
-    @Test(priority = 23, dependsOnGroups = "login", ignoreMissingDependencies = true)
+    @Test(priority = 23, dependsOnGroups = "login", ignoreMissingDependencies = true, alwaysRun = true)
     public void opc_StrikethroughSTypeTest() throws InterruptedException {
 
         System.out.println("🚀 OPC Test 23 (Strikethrough S — type TEST via keypad, caret send) STARTED");
@@ -1211,7 +1211,7 @@ public class OPC extends BaseClass {
         }
     }
 
-    @Test(priority = 24, dependsOnGroups = "login", ignoreMissingDependencies = true)
+    @Test(priority = 24, dependsOnGroups = "login", ignoreMissingDependencies = true, alwaysRun = true)
     public void opc_PuaTextViewThreeLineTextTest() throws InterruptedException {
 
         System.out.println("🚀 OPC Test 24 (Numbered list — Write something… multiline, ENTER send) STARTED");
@@ -1274,7 +1274,7 @@ public class OPC extends BaseClass {
         }
     }
 
-    @Test(priority = 26, dependsOnGroups = "login", ignoreMissingDependencies = true)
+    @Test(priority = 26, dependsOnGroups = "login", ignoreMissingDependencies = true, alwaysRun = true)
     public void opc_InsertLinkFillAndConfirm() throws InterruptedException {
 
         System.out.println("🚀 OPC Test 26 (Insert link — label, URL, confirm) STARTED");
@@ -1346,7 +1346,8 @@ public class OPC extends BaseClass {
     @Test(
         priority = 27,
         dependsOnMethods = "opc_InsertLinkFillAndConfirm",
-        ignoreMissingDependencies = true)
+        ignoreMissingDependencies = true,
+        alwaysRun = true)
     public void opc_SuccessfulConversationOpc() throws InterruptedException {
 
         Thread.sleep(WAIT_BEFORE_OPC27_SUCCESS_LOG_MS);
