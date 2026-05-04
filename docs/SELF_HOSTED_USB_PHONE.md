@@ -56,7 +56,8 @@ GitHub will still show **offline** if the machine is off or has no network—the
 
 | Variable | Purpose |
 |----------|---------|
-| `SKIP_EMULATOR_E2E_ON_PUSH` | Set to `true` to **skip** **`appium-emulator-e2e`** on **push** to `main`. |
+| `RUN_EMULATOR_E2E_ON_PUSH` | Set to `true` to also run **`appium-emulator-e2e`** on push (needs secret **`APPIUM_E2E_APK_URL`**). **Default:** emulator job is **off**. |
+| `RUN_UBUNTU_APPIUM_SMOKE_ON_PUSH` | Set to `true` to also run **`appium-ubuntu-smoke`** on push. **Default:** off. |
 | `SKIP_DEVICE_E2E_ON_PUSH` | Set to `true` to **skip** **`appium-self-hosted-device`** on push (manual **Run workflow** still runs it). |
 | `APPIUM_UDID` | From `adb devices` (optional if only one device) |
 | `APPIUM_PLATFORM_VERSION` | Android version of the phone |
@@ -76,7 +77,7 @@ Either:
 
 ## 7. Run the job
 
-**`testng.xml` on every push to `main` (without USB):** **`appium-emulator-e2e`** and **`appium-ubuntu-smoke`** run on **push** (same `testng.xml` via Maven). Set secret **`APPIUM_E2E_APK_URL`** to a direct `.apk` URL so the emulator can install the app.
+**Default on every push to `main`:** only **`appium-self-hosted-device`** runs **`testng.xml`** on your **USB phone** (self-hosted runner). Emulator and ubuntu jobs are **opt-in** (see variables **`RUN_EMULATOR_E2E_ON_PUSH`** and **`RUN_UBUNTU_APPIUM_SMOKE_ON_PUSH`** above).
 
 **`appium-self-hosted-device` (real phone):**
 
@@ -91,7 +92,7 @@ Open the run → job **`appium-self-hosted-device`** → logs. On success, downl
 
 ### Validating with an empty commit
 
-Yes. A push to `main` is a push to `main` for Actions: an **empty commit** triggers the **same** **Mobile E2E (Appium)** workflow, including **`appium-self-hosted-device`** (unless **`SKIP_DEVICE_E2E_ON_PUSH=true`**) and **`appium-emulator-e2e`** (unless **`SKIP_EMULATOR_E2E_ON_PUSH=true`**).
+Yes. A push to `main` triggers **Mobile E2E (Appium)** with **`appium-self-hosted-device`** by default (unless **`SKIP_DEVICE_E2E_ON_PUSH=true`**). Emulator/ubuntu run only if you set **`RUN_EMULATOR_E2E_ON_PUSH`** / **`RUN_UBUNTU_APPIUM_SMOKE_ON_PUSH`** to **`true`**.
 
 ```bash
 git commit --allow-empty -m "ci: validate workflow on push"
