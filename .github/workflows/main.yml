@@ -39,7 +39,8 @@ jobs:
     name: Appium E2E (Android emulator + testng.xml)
     needs: compile
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    # Tests + OPC on a cold emulator often exceeds 90m (boot, APK, long UI flow).
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
 

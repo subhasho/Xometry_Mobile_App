@@ -55,4 +55,9 @@ done
 curl -fsS "$STATUS_URL" >/dev/null 2>&1 || { tail -n 100 appium.log || true; exit 1; }
 
 SUITE="${TESTNG_SUITE:-testng.xml}"
+if [[ ! -f "appiumtests/${SUITE}" ]]; then
+  echo "::error::Suite file appiumtests/${SUITE} not found (TESTNG_SUITE=${SUITE})."
+  exit 1
+fi
+echo "Running TestNG suite: ${SUITE} (module appiumtests, all @Test in classes listed in suite)"
 mvn -B -f appiumtests/pom.xml test -Dsurefire.suiteXmlFiles="$SUITE"
