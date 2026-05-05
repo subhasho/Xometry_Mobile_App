@@ -2,6 +2,8 @@
 #
 # Required: repository secret APPIUM_E2E_APK_URL — direct HTTPS URL to the .apk file.
 # Optional variables: APPIUM_APP_PACKAGE, APPIUM_APP_ACTIVITY (must match the APK).
+#
+# If nothing runs on push: GitHub → Actions → CI — Main → enable workflow (it must not be "disabled").
 
 name: CI — Main
 
@@ -81,6 +83,11 @@ jobs:
           APPIUM_APP_PACKAGE: ${{ vars.APPIUM_APP_PACKAGE }}
           APPIUM_APP_ACTIVITY: ${{ vars.APPIUM_APP_ACTIVITY }}
           APPIUM_ONLY_EMULATOR: "true"
+
+      - name: Summarize TestNG pass / fail / skip
+        if: always()
+        shell: bash
+        run: python3 scripts/summarize-testng-results.py appiumtests/target/surefire-reports/testng-results.xml
 
       - name: Upload emulator artifacts
         if: always()
