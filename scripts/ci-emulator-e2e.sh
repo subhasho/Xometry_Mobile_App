@@ -37,6 +37,17 @@ export APPIUM_DEVICE_NAME="${APPIUM_DEVICE_NAME:-Android Emulator}"
 
 echo "Installing APK from CI..."
 curl -fSL "$APK_URL" -o /tmp/e2e-stage.apk
+if [[ ! -s /tmp/e2e-stage.apk ]]; then
+  echo "::error::Downloaded APK is empty — check APPIUM_E2E_APK_URL (must be a direct file URL, not an HTML page)."
+  exit 1
+fi
+python3 - <<'PY' || { echo "::error::Downloaded file is not a valid APK (ZIP). URL may point to HTML or wrong asset."; exit 1; }
+import zipfile
+z = zipfile.ZipFile("/tmp/e2e-stage.apk", "r")
+names = z.namelist()
+if not any(n.endswith("AndroidManifest.xml") for n in names):
+    raise SystemExit("missing AndroidManifest in archive")
+PY
 adb install -r -t /tmp/e2e-stage.apk || adb install -r /tmp/e2e-stage.apk
 export APK_PATH="/tmp/e2e-stage.apk"
 

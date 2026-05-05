@@ -77,6 +77,15 @@ def main() -> int:
             w(f"- `{cname}.{name}`")
         w("")
 
+    # Surface counts in the Actions log (Annotations / search).
+    print(f"::notice::TestNG — passed={passed} failed={failed} skipped={skipped} total={total}")
+    try:
+        fc = int(failed)
+    except ValueError:
+        fc = 0
+    if fc > 0:
+        print(f"::error::TestNG reported {failed} failed test(s). See job Summary and Surefire artifact.")
+
     return 0
 
 

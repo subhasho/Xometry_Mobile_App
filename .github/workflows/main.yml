@@ -7,14 +7,18 @@
 
 name: CI — Main
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
+# Do not cancel a long emulator run when another push lands — each push still queues a new run.
 concurrency:
   group: ci-main-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   TESTNG_SUITE: testng.xml
@@ -68,11 +72,10 @@ jobs:
 
       - uses: reactivecircus/android-emulator-runner@v2
         with:
-          # google_atd = smaller Automated Test Device image (faster cold boot than full google_apis).
-          # -no-snapshot-load avoids broken/missing default_boot snapshot loops that leave adb "offline".
-          api-level: 31
+          # Full google_apis (better app compatibility than ATD). Snapshot flags avoid default_boot offline loops.
+          api-level: 30
           arch: x86_64
-          target: google_atd
+          target: google_apis
           cores: 2
           ram-size: 2048M
           emulator-boot-timeout: 1200
@@ -85,7 +88,7 @@ jobs:
           APPIUM_APP_PACKAGE: ${{ vars.APPIUM_APP_PACKAGE }}
           APPIUM_APP_ACTIVITY: ${{ vars.APPIUM_APP_ACTIVITY }}
           APPIUM_ONLY_EMULATOR: "true"
-          APPIUM_PLATFORM_VERSION: "12"
+          APPIUM_PLATFORM_VERSION: "11"
 
       - name: Summarize TestNG pass / fail / skip
         if: always()

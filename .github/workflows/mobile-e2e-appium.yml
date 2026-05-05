@@ -43,9 +43,9 @@ jobs:
 
       - uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 31
+          api-level: 30
           arch: x86_64
-          target: google_atd
+          target: google_apis
           cores: 2
           ram-size: 2048M
           emulator-boot-timeout: 1200
@@ -58,7 +58,7 @@ jobs:
           APPIUM_APP_PACKAGE: ${{ vars.APPIUM_APP_PACKAGE }}
           APPIUM_APP_ACTIVITY: ${{ vars.APPIUM_APP_ACTIVITY }}
           APPIUM_ONLY_EMULATOR: "true"
-          APPIUM_PLATFORM_VERSION: "12"
+          APPIUM_PLATFORM_VERSION: "11"
 
       - name: Upload emulator artifacts
         if: always()
