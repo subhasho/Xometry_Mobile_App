@@ -44,6 +44,8 @@ public class OPC extends BaseClass {
     /** Pause after description text so the form can settle before consent (Tests 10–11). */
     private static final int WAIT_AFTER_DESCRIPTION_FIELD_MS = 3000;
 
+    private static final String APP_PACKAGE = "com.xometry.workcenter.preview.stage";
+
     /**
      * Consent checkbox: parent row often has a long content-desc; target inner ViewGroup (not the full exact string).
      */
@@ -1564,9 +1566,9 @@ public class OPC extends BaseClass {
     /** If the app was backgrounded or the activity lost focus, bring it back before Tests 10–11. */
     private void bringAppToForeground(AndroidDriver<MobileElement> driver) throws InterruptedException {
         try {
-            driver.activateApp(BaseClass.configuredAppPackage());
+            driver.activateApp(APP_PACKAGE);
             Thread.sleep(1200);
-            System.out.println("↪️ activateApp(" + BaseClass.configuredAppPackage() + ") — ready for next OPC step");
+            System.out.println("↪️ activateApp(" + APP_PACKAGE + ") — ready for next OPC step");
         } catch (Exception e) {
             System.out.println("⚠️ activateApp: " + e.getMessage());
         }

@@ -7,8 +7,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.By;
@@ -28,15 +26,6 @@ import utils.TakeScreenshot;
 public class BaseClass {
 
     public static AppiumDriver<MobileElement> driver;
-
-    /** Same package as {@link #startDriverInternal} uses (for {@code activateApp}, etc.). */
-    public static String configuredAppPackage() {
-        String p = System.getenv("APPIUM_APP_PACKAGE");
-        if (p == null || p.isBlank()) {
-            return "com.xometry.workcenter.preview.stage";
-        }
-        return p.trim();
-    }
     private static boolean isDriverStarted = false;
     private static long lastCommandTime = System.currentTimeMillis();
 
@@ -72,14 +61,8 @@ public class BaseClass {
         }
     }
 
-    /**
-     * Authorized serials from {@code adb devices}. Prefers AVD emulators ({@code emulator-*})
-     * over physical devices when both are connected so local runs target the emulator by default.
-     * Set {@code APPIUM_UDID} to force a specific device.
-     */
+    /** First serial with state {@code device} from {@code adb devices}, or null. */
     static String firstAuthorizedDeviceFromAdb() {
-        List<String> emulators = new ArrayList<>();
-        List<String> others = new ArrayList<>();
         try {
             Process proc = new ProcessBuilder("adb", "devices")
                 .redirectErrorStream(true)
@@ -94,12 +77,7 @@ public class BaseClass {
                     }
                     String[] parts = line.split("\\s+");
                     if (parts.length >= 2 && "device".equals(parts[1])) {
-                        String id = parts[0];
-                        if (id.startsWith("emulator-")) {
-                            emulators.add(id);
-                        } else {
-                            others.add(id);
-                        }
+                        return parts[0];
                     }
                 }
             }
@@ -107,16 +85,7 @@ public class BaseClass {
         } catch (Exception e) {
             System.err.println("Could not read adb devices: " + e.getMessage());
         }
-        if (!emulators.isEmpty()) {
-            return emulators.get(0);
-        }
-        String onlyEmu = System.getenv("APPIUM_ONLY_EMULATOR");
-        boolean emulatorOnly = onlyEmu != null
-            && ("1".equals(onlyEmu) || "true".equalsIgnoreCase(onlyEmu.trim()));
-        if (emulatorOnly) {
-            return null;
-        }
-        return others.isEmpty() ? null : others.get(0);
+        return null;
     }
 
     private static void startDriverInternal() {
@@ -132,8 +101,7 @@ public class BaseClass {
                 }
                 if (udid == null || udid.isBlank()) {
                     throw new RuntimeException(
-                        "No device UDID: start an AVD so adb lists emulator-5554 (or set APPIUM_UDID). "
-                            + "If APPIUM_ONLY_EMULATOR=true, a running emulator is required. Run: adb devices");
+                        "No device UDID: set env APPIUM_UDID or connect one USB device with adb authorized (adb devices).");
                 }
                 cap.setCapability("udid", udid.trim());
 
@@ -149,20 +117,8 @@ public class BaseClass {
                     cap.setCapability("platformVersion", platVer);
                 }
 
-                String appPackage = System.getenv("APPIUM_APP_PACKAGE");
-                if (appPackage == null || appPackage.isBlank()) {
-                    appPackage = "com.xometry.workcenter.preview.stage";
-                } else {
-                    appPackage = appPackage.trim();
-                }
-                String appActivity = System.getenv("APPIUM_APP_ACTIVITY");
-                if (appActivity != null && !appActivity.isBlank()) {
-                    appActivity = appActivity.trim();
-                } else {
-                    appActivity = appPackage + ".MainActivity";
-                }
-                cap.setCapability("appPackage", appPackage);
-                cap.setCapability("appActivity", appActivity);
+                cap.setCapability("appPackage", "com.xometry.workcenter.preview.stage");
+                cap.setCapability("appActivity", "com.xometry.workcenter.preview.stage.MainActivity");
                 cap.setCapability("noReset", false);
                 cap.setCapability("fullReset", false);
                 cap.setCapability("automationName", "UiAutomator2");
