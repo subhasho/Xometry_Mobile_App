@@ -37,12 +37,6 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install Maven and curl
-        shell: bash
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y maven curl
-
       - name: Compile tests
         shell: bash
         run: mvn -B -f appiumtests/pom.xml test-compile

@@ -64,11 +64,7 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install Maven and curl
-        shell: bash
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y maven curl
+      # ubuntu-latest already includes Maven + curl (see actions/runner-images). No apt on every run.
 
       - uses: reactivecircus/android-emulator-runner@v2
         with:
