@@ -1,3 +1,6 @@
+# Fast compile-only check. Full Appium E2E runs on an Android emulator in
+# .github/workflows/mobile-e2e-appium.yml (push to main).
+
 name: Main — Maven test-compile
 
 on:
