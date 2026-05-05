@@ -79,5 +79,5 @@ if [[ ! -f "appiumtests/${SUITE}" ]]; then
   echo "::error::Suite file appiumtests/${SUITE} not found (TESTNG_SUITE=${SUITE})."
   exit 1
 fi
-echo "Running TestNG suite: ${SUITE} (module appiumtests, all @Test in classes listed in suite)"
+echo "Running TestNG suite: ${SUITE} on emulator only (each test is logged — verbose=2 in testng.xml)"
 mvn -B -f appiumtests/pom.xml test -Dsurefire.suiteXmlFiles="$SUITE"

@@ -18,7 +18,6 @@ import io.appium.java_client.touch.WaitOptions;
 import io.appium.java_client.touch.offset.PointOption;
 
 import java.time.Duration;
-import java.util.List;
 
 public class Tests extends BaseClass {
 
@@ -44,41 +43,9 @@ public class Tests extends BaseClass {
     }
 
     @Test(priority = 4, dependsOnMethods = {"testthree"}, alwaysRun = true, retryAnalyzer = RetryAnalyzer.class)
-    public void testFour() throws InterruptedException {
-        Thread.sleep(2000);
-        AndroidDriver<MobileElement> ad = (AndroidDriver<MobileElement>) driver;
-        try {
-            ad.hideKeyboard();
-        } catch (Exception ignored) {
-        }
-        Thread.sleep(500);
-
-        // Do not use //android.widget.EditText alone: after "Continue" the email field can still
-        // be first in the tree, so sendKeys hits the wrong box or the IME blocks input. Prefer the
-        // password field (usually last EditText) or an explicit Password hint.
-        WebDriverWait wait = new WebDriverWait(driver, 25);
-        By byPasswordHint = By.xpath(
-            "//android.widget.EditText[@password='true' or contains(@hint,'Password') or contains(@hint,'password')]");
-        List<MobileElement> hinted = driver.findElements(byPasswordHint);
-        MobileElement passwordField;
-        if (!hinted.isEmpty()) {
-            passwordField = (MobileElement) wait.until(ExpectedConditions.elementToBeClickable(byPasswordHint));
-        } else {
-            // Email field often stays in the hierarchy; password step is usually the last EditText.
-            passwordField = (MobileElement) wait.until(ExpectedConditions.elementToBeClickable(
-                By.xpath("(//android.widget.EditText)[last()]")));
-        }
-        passwordField.click();
-        Thread.sleep(400);
-        try {
-            passwordField.clear();
-        } catch (Exception ignored) {
-        }
+    public void testFour() {
+        MobileElement passwordField = driver.findElement(By.xpath("//android.widget.EditText"));
         passwordField.sendKeys("bubbles101");
-        try {
-            ad.hideKeyboard();
-        } catch (Exception ignored) {
-        }
         System.out.println("completed TestFour..");
     }
     @Test(priority = 5, dependsOnMethods = {"testFour"}, alwaysRun = true, retryAnalyzer = RetryAnalyzer.class)

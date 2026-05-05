@@ -1,7 +1,6 @@
-# Optional manual runs: self-hosted USB device, or a second manual emulator run.
-# Default CI (every push to main) is in .github/workflows/main.yml — compile + emulator E2E.
+# Manual emulator-only E2E (same as CI — Main emulator job). Push to main runs CI in main.yml.
 
-name: Mobile E2E (manual)
+name: Mobile E2E (manual — emulator only)
 
 on:
   workflow_dispatch:
@@ -14,6 +13,8 @@ jobs:
     name: Appium E2E (Android emulator + testng.xml)
     runs-on: ubuntu-latest
     timeout-minutes: 150
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -60,7 +61,7 @@ jobs:
           APPIUM_ONLY_EMULATOR: "true"
           APPIUM_PLATFORM_VERSION: "11"
 
-      - name: Validate emulator E2E for deployment (fail if any test failed or none passed)
+      - name: Fail job if emulator E2E had failures or no passes
         if: always()
         shell: bash
         run: python3 scripts/validate-testng-for-deployment.py appiumtests/target/surefire-reports/testng-results.xml
@@ -70,56 +71,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: appium-artifacts-emulator-manual
-          path: |
-            appium.log
-            appiumtests/test-output/**
-            appiumtests/Screenshots/**
-            appiumtests/target/surefire-reports/**
-
-  appium-self-hosted-device:
-    name: Appium E2E (self-hosted + USB device)
-    runs-on: self-hosted
-    timeout-minutes: 120
-    if: vars.RUN_SELF_HOSTED_DEVICE_E2E_ON_PUSH == 'true'
-    env:
-      APPIUM_UDID: ${{ vars.APPIUM_UDID }}
-      APPIUM_DEVICE_NAME: ${{ vars.APPIUM_DEVICE_NAME }}
-      APPIUM_PLATFORM_NAME: ${{ vars.APPIUM_PLATFORM_NAME }}
-      APPIUM_PLATFORM_VERSION: ${{ vars.APPIUM_PLATFORM_VERSION }}
-      APK_PATH: ${{ vars.APK_PATH }}
-      APPIUM_HOST: ${{ vars.APPIUM_HOST }}
-      APPIUM_PORT: ${{ vars.APPIUM_PORT }}
-      APPIUM_BASE_PATH: ${{ vars.APPIUM_BASE_PATH }}
-      APPIUM_URL: ${{ secrets.APPIUM_URL }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-          cache: maven
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Run TestNG suite on device (Unix)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: bash scripts/run-appium-device-e2e.sh
-
-      - name: Run TestNG suite on device (Windows)
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: |
-          & powershell -NoProfile -ExecutionPolicy Bypass -File "$env:GITHUB_WORKSPACE\scripts\run-appium-device-e2e.ps1"
-
-      - name: Upload artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: appium-artifacts-self-hosted
           path: |
             appium.log
             appiumtests/test-output/**

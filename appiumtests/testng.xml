@@ -1,6 +1,7 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.1.dtd" >
 <!-- configfailurepolicy=continue: keep going if a @Before* config method fails (does not change dependsOnMethods skip-on-failure). -->
-<suite name="Suite" parallel="none" thread-count="1" preserve-order="true" configfailurepolicy="continue">
+<!-- verbose=2: log every test start/finish in Maven output (GitHub Actions console). -->
+<suite name="Suite" verbose="2" parallel="none" thread-count="1" preserve-order="true" configfailurepolicy="continue">
   <listeners>
     <listener class-name="Tests.AppiumSuiteListener"/>
   </listeners>

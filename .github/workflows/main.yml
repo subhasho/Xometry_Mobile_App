@@ -90,12 +90,7 @@ jobs:
           APPIUM_ONLY_EMULATOR: "true"
           APPIUM_PLATFORM_VERSION: "11"
 
-      - name: Summarize TestNG pass / fail / skip
-        if: always()
-        shell: bash
-        run: python3 scripts/summarize-testng-results.py appiumtests/target/surefire-reports/testng-results.xml
-
-      - name: Validate emulator E2E for deployment (fail if any test failed or none passed)
+      - name: Fail if emulator E2E had failures or zero passes (each test is in the Maven log)
         if: always()
         shell: bash
         run: python3 scripts/validate-testng-for-deployment.py appiumtests/target/surefire-reports/testng-results.xml
