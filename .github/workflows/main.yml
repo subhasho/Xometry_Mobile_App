@@ -1,18 +1,25 @@
-# Fast compile-only check. Full Appium E2E runs on an Android emulator in
-# .github/workflows/mobile-e2e-appium.yml (push to main).
+# Every push to main: compile tests, then run full testng.xml (Tests + OPC) on an Android emulator.
+#
+# Required: repository secret APPIUM_E2E_APK_URL — direct HTTPS URL to the .apk file.
+# Optional variables: APPIUM_APP_PACKAGE, APPIUM_APP_ACTIVITY (must match the APK).
 
-name: Main — Maven test-compile
+name: CI — Main
 
 on:
   push:
     branches: [main]
-    paths:
-      - "appiumtests/**"
-      - ".github/workflows/main.yml"
   workflow_dispatch:
+
+concurrency:
+  group: ci-main-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TESTNG_SUITE: testng.xml
 
 jobs:
   compile:
+    name: Maven test-compile
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,5 +30,65 @@ jobs:
           java-version: "17"
           cache: maven
 
-      - name: Compile
+      - name: Compile test sources
         run: mvn -B -f appiumtests/pom.xml test-compile
+
+  appium-emulator-e2e:
+    name: Appium E2E (Android emulator + testng.xml)
+    needs: compile
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require APK download URL (secret)
+        shell: bash
+        env:
+          APK_URL: ${{ secrets.APPIUM_E2E_APK_URL }}
+        run: |
+          if [ -z "${APK_URL}" ]; then
+            echo "::error::Set repository secret APPIUM_E2E_APK_URL (Settings → Secrets and variables → Actions). Use a direct HTTPS link to your .apk (e.g. upload to a Release or artifact store). Without this secret, the emulator cannot install the app and tests will not run."
+            exit 1
+          fi
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Maven and curl
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y maven curl
+
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: bash scripts/ci-emulator-e2e.sh
+        env:
+          APK_URL: ${{ secrets.APPIUM_E2E_APK_URL }}
+          TESTNG_SUITE: ${{ env.TESTNG_SUITE }}
+          APPIUM_APP_PACKAGE: ${{ vars.APPIUM_APP_PACKAGE }}
+          APPIUM_APP_ACTIVITY: ${{ vars.APPIUM_APP_ACTIVITY }}
+          APPIUM_ONLY_EMULATOR: "true"
+
+      - name: Upload emulator artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: appium-artifacts-emulator
+          path: |
+            appium.log
+            appiumtests/test-output/**
+            appiumtests/Screenshots/**
+            appiumtests/target/surefire-reports/**
