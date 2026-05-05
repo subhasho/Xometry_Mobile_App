@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
 # Runs inside reactivecircus/android-emulator-runner "script" (emulator is already booted).
-# Set APK_URL (e.g. from secret APPIUM_E2E_APK_URL) to a direct .apk download for com.xometry.workcenter.preview.stage.
+# Requires APK_URL (secret APPIUM_E2E_APK_URL) — direct HTTPS URL to the .apk.
+# Optional: APPIUM_APP_PACKAGE / APPIUM_APP_ACTIVITY (GitHub Actions vars) must match the APK.
 set -euxo pipefail
 ROOT="${GITHUB_WORKSPACE:-$(pwd)}"
 cd "$ROOT"
+
+if [[ -z "${APK_URL:-}" ]]; then
+  echo "::error::APK_URL is not set. Add repository secret APPIUM_E2E_APK_URL with a direct download link to the Android .apk."
+  exit 1
+fi
 
 adb devices
 export APPIUM_UDID
@@ -20,13 +26,10 @@ echo "Using UDID=$APPIUM_UDID"
 export APPIUM_PLATFORM_VERSION="${APPIUM_PLATFORM_VERSION:-11}"
 export APPIUM_DEVICE_NAME="${APPIUM_DEVICE_NAME:-Android Emulator}"
 
-if [[ -n "${APK_URL:-}" ]]; then
-  echo "Installing APK from CI secret..."
-  curl -fSL "$APK_URL" -o /tmp/e2e-stage.apk
-  adb install -r -t /tmp/e2e-stage.apk || adb install -r /tmp/e2e-stage.apk
-else
-  echo "::warning::APK_URL / secret APPIUM_E2E_APK_URL is empty. Install the stage app on the AVD first or set the secret to a direct .apk URL."
-fi
+echo "Installing APK from CI..."
+curl -fSL "$APK_URL" -o /tmp/e2e-stage.apk
+adb install -r -t /tmp/e2e-stage.apk || adb install -r /tmp/e2e-stage.apk
+export APK_PATH="/tmp/e2e-stage.apk"
 
 npm i -g appium@latest
 appium -v

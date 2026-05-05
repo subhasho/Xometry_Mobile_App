@@ -1,11 +1,12 @@
 # Mobile E2E (Appium + TestNG)
 #
-# Default on every push to main: ONLY real device (self-hosted) runs testng.xml.
-# 1) appium-self-hosted-device — USB phone on YOUR self-hosted runner; runs on every push + workflow_dispatch.
-#    Set SKIP_DEVICE_E2E_ON_PUSH=true to skip on push only (manual Run workflow still runs it).
-# Optional GitHub-hosted jobs (off unless you set the variable to true):
-# 2) appium-emulator-e2e — set repository variable RUN_EMULATOR_E2E_ON_PUSH=true. Needs secret APPIUM_E2E_APK_URL.
-# 3) appium-ubuntu-smoke — set RUN_UBUNTU_APPIUM_SMOKE_ON_PUSH=true.
+# Every push to main: GitHub-hosted Android emulator runs testng.xml (Tests + OPC).
+#   • Required repo secret: APPIUM_E2E_APK_URL — direct HTTPS URL to the .apk (installs on AVD before tests).
+#   • Optional repo variable: APPIUM_APP_PACKAGE — e.g. com.xometry.workcenter.devstage if APK is not preview.stage.
+#
+# Self-hosted USB device (optional): set repo variable RUN_SELF_HOSTED_DEVICE_E2E_ON_PUSH=true, or use workflow_dispatch.
+#
+# Optional: appium-ubuntu-smoke — set RUN_UBUNTU_APPIUM_SMOKE_ON_PUSH=true.
 #
 # testng.xml: Tests.AppiumSuiteListener + alwaysRun on dependent tests.
 
@@ -140,13 +141,12 @@ jobs:
             appiumtests/Screenshots/**
 
   # ---------------------------------------------------------------------------
-  # GitHub-hosted Android emulator — opt-in: set RUN_EMULATOR_E2E_ON_PUSH=true on the repo.
+  # GitHub-hosted Android emulator — runs on every push to main (and manual dispatch).
   # ---------------------------------------------------------------------------
   appium-emulator-e2e:
     name: Appium E2E (Android emulator + testng.xml)
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    if: ${{ vars.RUN_EMULATOR_E2E_ON_PUSH == 'true' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -177,6 +177,9 @@ jobs:
         env:
           APK_URL: ${{ secrets.APPIUM_E2E_APK_URL }}
           TESTNG_SUITE: ${{ env.TESTNG_SUITE }}
+          APPIUM_APP_PACKAGE: ${{ vars.APPIUM_APP_PACKAGE }}
+          APPIUM_APP_ACTIVITY: ${{ vars.APPIUM_APP_ACTIVITY }}
+          APPIUM_ONLY_EMULATOR: "true"
 
       - name: Upload emulator artifacts
         if: always()
@@ -198,7 +201,7 @@ jobs:
     timeout-minutes: 120
     if: |
       github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && vars.SKIP_DEVICE_E2E_ON_PUSH != 'true')
+      (github.event_name == 'push' && vars.RUN_SELF_HOSTED_DEVICE_E2E_ON_PUSH == 'true')
     env:
       # Optional overrides for BaseClass (see appiumtests/src/test/java/Tests/BaseClass.java)
       APPIUM_UDID: ${{ vars.APPIUM_UDID }}
