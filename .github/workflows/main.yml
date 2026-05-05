@@ -68,15 +68,16 @@ jobs:
 
       - uses: reactivecircus/android-emulator-runner@v2
         with:
-          # API 31 + longer boot timeout reduces "adb: device offline" during cold boot on GitHub runners.
+          # google_atd = smaller Automated Test Device image (faster cold boot than full google_apis).
+          # -no-snapshot-load avoids broken/missing default_boot snapshot loops that leave adb "offline".
           api-level: 31
           arch: x86_64
-          target: google_apis
-          cores: 4
-          ram-size: 4096M
+          target: google_atd
+          cores: 2
+          ram-size: 2048M
           emulator-boot-timeout: 1200
           disable-animations: true
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          emulator-options: -no-snapshot-load -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           script: bash scripts/ci-emulator-e2e.sh
         env:
           APK_URL: ${{ secrets.APPIUM_E2E_APK_URL }}
