@@ -60,6 +60,11 @@ jobs:
           APPIUM_ONLY_EMULATOR: "true"
           APPIUM_PLATFORM_VERSION: "11"
 
+      - name: Validate emulator E2E for deployment (fail if any test failed or none passed)
+        if: always()
+        shell: bash
+        run: python3 scripts/validate-testng-for-deployment.py appiumtests/target/surefire-reports/testng-results.xml
+
       - name: Upload emulator artifacts
         if: always()
         uses: actions/upload-artifact@v4
