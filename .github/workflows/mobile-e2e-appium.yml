@@ -13,7 +13,7 @@ jobs:
   appium-emulator-e2e:
     name: Appium E2E (Android emulator + testng.xml)
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
 
@@ -49,9 +49,12 @@ jobs:
 
       - uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 30
+          api-level: 31
           arch: x86_64
           target: google_apis
+          cores: 4
+          ram-size: 4096M
+          emulator-boot-timeout: 1200
           disable-animations: true
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           script: bash scripts/ci-emulator-e2e.sh
@@ -61,6 +64,7 @@ jobs:
           APPIUM_APP_PACKAGE: ${{ vars.APPIUM_APP_PACKAGE }}
           APPIUM_APP_ACTIVITY: ${{ vars.APPIUM_APP_ACTIVITY }}
           APPIUM_ONLY_EMULATOR: "true"
+          APPIUM_PLATFORM_VERSION: "12"
 
       - name: Upload emulator artifacts
         if: always()

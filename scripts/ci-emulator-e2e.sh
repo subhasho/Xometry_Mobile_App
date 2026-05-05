@@ -11,6 +11,15 @@ if [[ -z "${APK_URL:-}" ]]; then
   exit 1
 fi
 
+# Recover from transient "adb: device offline" after the runner finishes boot polling.
+for _ in $(seq 1 30); do
+  if adb devices 2>/dev/null | grep -qE "emulator-[0-9]+[[:space:]]+device"; then
+    break
+  fi
+  adb reconnect 2>/dev/null || true
+  sleep 2
+done
+
 adb devices
 export APPIUM_UDID
 APPIUM_UDID="$(adb devices | awk '$2=="device" && $1 ~ /^emulator/ { print $1; exit }')"
@@ -23,7 +32,7 @@ if [[ -z "${APPIUM_UDID}" ]]; then
 fi
 echo "Using UDID=$APPIUM_UDID"
 
-export APPIUM_PLATFORM_VERSION="${APPIUM_PLATFORM_VERSION:-11}"
+export APPIUM_PLATFORM_VERSION="${APPIUM_PLATFORM_VERSION:-}"
 export APPIUM_DEVICE_NAME="${APPIUM_DEVICE_NAME:-Android Emulator}"
 
 echo "Installing APK from CI..."
