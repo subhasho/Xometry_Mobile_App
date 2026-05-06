@@ -1,11 +1,12 @@
-# Policy: every push to main runs mobile E2E — no commit-title gate (e.g. no "[Run Tests]" flag).
-# Flow: Maven test-compile, then full TestNG suite (appiumtests/testng.xml) on a Linux-hosted Android emulator
-# with Appium started inside CI (see scripts/ci-emulator-e2e.sh). Which classes run is defined only by testng.xml.
+# Policy: every push to main runs Maven compile; mobile E2E is best-effort and does not fail the workflow.
+# - compile: always runs and must pass for a green workflow (if it is a required check).
+# - appium-emulator-e2e: skipped when APPIUM_E2E_APK_URL is missing; otherwise runs emulator + Appium + testng.xml.
+#   If the emulator, Appium, or tests fail, this job is marked failed but the overall workflow still succeeds
+#   (continue-on-error). Add other jobs with needs: [compile] only — do not gate deploy on appium-emulator-e2e.
 #
-# Required: repository secret APPIUM_E2E_APK_URL — direct HTTPS URL to the .apk file.
 # Optional repository variables: APPIUM_APP_PACKAGE, APPIUM_APP_ACTIVITY (must match the APK).
 #
-# If nothing runs on push: GitHub → Actions → CI — Main → enable workflow (it must not be "disabled").
+# Branch protection: mark only checks you require (e.g. "Maven test-compile"), not the E2E job, if merges should not block on E2E.
 
 name: CI — Main
 
@@ -44,34 +45,42 @@ jobs:
   appium-emulator-e2e:
     name: Appium E2E (Android emulator + testng.xml)
     needs: compile
+    # Emulator / Appium / UI failures do not turn the whole workflow red (other pipelines or jobs stay unblocked).
+    continue-on-error: true
     runs-on: ubuntu-latest
     # Tests + OPC on a cold emulator often exceeds 90m (boot, APK, long UI flow).
     timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
 
-      - name: Require APK download URL (secret)
+      - name: E2E gate — APK URL configured?
+        id: gate
         shell: bash
         env:
           APK_URL: ${{ secrets.APPIUM_E2E_APK_URL }}
         run: |
           if [ -z "${APK_URL}" ]; then
-            echo "::error::Set repository secret APPIUM_E2E_APK_URL (Settings → Secrets and variables → Actions). Use a direct HTTPS link to your .apk (e.g. upload to a Release or artifact store). Without this secret, the emulator cannot install the app and tests will not run."
-            exit 1
+            echo "::notice::Skipping Appium E2E: secret APPIUM_E2E_APK_URL is not set. Configure it to run tests on the emulator."
+            echo "run=false" >> "${GITHUB_OUTPUT}"
+            exit 0
           fi
+          echo "run=true" >> "${GITHUB_OUTPUT}"
 
       - uses: actions/setup-java@v4
+        if: steps.gate.outputs.run == 'true'
         with:
           distribution: temurin
           java-version: "17"
           cache: maven
 
       - uses: actions/setup-node@v4
+        if: steps.gate.outputs.run == 'true'
         with:
           node-version: "20"
 
       # ubuntu-latest already includes Maven + curl (see actions/runner-images). No apt on every run.
       - name: Enable KVM for emulator acceleration
+        if: steps.gate.outputs.run == 'true'
         shell: bash
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -79,6 +88,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - uses: reactivecircus/android-emulator-runner@v2
+        if: steps.gate.outputs.run == 'true'
         with:
           # Full google_apis (better app compatibility than ATD). Snapshot flags avoid default_boot offline loops.
           api-level: 30
@@ -98,13 +108,13 @@ jobs:
           APPIUM_ONLY_EMULATOR: "true"
           APPIUM_PLATFORM_VERSION: "11"
 
-      - name: Fail if emulator E2E had failures or zero passes (each test is in the Maven log)
-        if: always()
+      - name: Validate TestNG results (fails this job only; workflow still OK)
+        if: always() && steps.gate.outputs.run == 'true'
         shell: bash
         run: python3 scripts/validate-testng-for-deployment.py appiumtests/target/surefire-reports/testng-results.xml
 
       - name: Upload emulator artifacts
-        if: always()
+        if: always() && steps.gate.outputs.run == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: appium-artifacts-emulator

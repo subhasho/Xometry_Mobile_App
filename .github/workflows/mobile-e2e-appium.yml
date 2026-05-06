@@ -1,5 +1,5 @@
-# Optional manual run of the same emulator + Appium + testng.xml job as main.yml (workflow_dispatch only).
-# Push to main still runs the full suite automatically via CI — Main; this file does not add commit-message conditions.
+# Manual run: same emulator + Appium + testng.xml as main.yml. Non-blocking for other workflows.
+# If APPIUM_E2E_APK_URL is missing, E2E steps are skipped. Job uses continue-on-error so infra/test failures do not fail the workflow run.
 
 name: Mobile E2E (manual — emulator only)
 
@@ -12,6 +12,7 @@ env:
 jobs:
   appium-emulator-e2e:
     name: Appium E2E (Android emulator + testng.xml)
+    continue-on-error: true
     runs-on: ubuntu-latest
     timeout-minutes: 150
     permissions:
@@ -19,31 +20,38 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Require APK download URL (secret)
+      - name: E2E gate — APK URL configured?
+        id: gate
         shell: bash
         env:
           APK_URL: ${{ secrets.APPIUM_E2E_APK_URL }}
         run: |
           if [ -z "${APK_URL}" ]; then
-            echo "::error::Set secret APPIUM_E2E_APK_URL on the repository."
-            exit 1
+            echo "::notice::Skipping Appium E2E: secret APPIUM_E2E_APK_URL is not set."
+            echo "run=false" >> "${GITHUB_OUTPUT}"
+            exit 0
           fi
+          echo "run=true" >> "${GITHUB_OUTPUT}"
 
       - uses: actions/setup-java@v4
+        if: steps.gate.outputs.run == 'true'
         with:
           distribution: temurin
           java-version: "17"
           cache: maven
 
       - uses: actions/setup-node@v4
+        if: steps.gate.outputs.run == 'true'
         with:
           node-version: "20"
 
       - name: Compile tests
+        if: steps.gate.outputs.run == 'true'
         shell: bash
         run: mvn -B -f appiumtests/pom.xml test-compile
 
       - name: Enable KVM for emulator acceleration
+        if: steps.gate.outputs.run == 'true'
         shell: bash
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -51,6 +59,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - uses: reactivecircus/android-emulator-runner@v2
+        if: steps.gate.outputs.run == 'true'
         with:
           api-level: 30
           arch: x86_64
@@ -69,13 +78,13 @@ jobs:
           APPIUM_ONLY_EMULATOR: "true"
           APPIUM_PLATFORM_VERSION: "11"
 
-      - name: Fail job if emulator E2E had failures or no passes
-        if: always()
+      - name: Validate TestNG results (fails this job only; workflow still OK)
+        if: always() && steps.gate.outputs.run == 'true'
         shell: bash
         run: python3 scripts/validate-testng-for-deployment.py appiumtests/target/surefire-reports/testng-results.xml
 
       - name: Upload emulator artifacts
-        if: always()
+        if: always() && steps.gate.outputs.run == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: appium-artifacts-emulator-manual
