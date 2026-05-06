@@ -25,6 +25,18 @@ import utils.TakeScreenshot;
 
 public class BaseClass {
 
+    /** Overridable via {@code APPIUM_APP_PACKAGE} / {@code APPIUM_APP_ACTIVITY} (same as GitHub Actions vars). */
+    public static final String APP_PACKAGE;
+    public static final String APP_ACTIVITY;
+
+    static {
+        String defPkg = "com.xometry.workcenter.preview.stage";
+        String p = System.getenv("APPIUM_APP_PACKAGE");
+        APP_PACKAGE = (p != null && !p.isBlank()) ? p.trim() : defPkg;
+        String a = System.getenv("APPIUM_APP_ACTIVITY");
+        APP_ACTIVITY = (a != null && !a.isBlank()) ? a.trim() : (APP_PACKAGE + ".MainActivity");
+    }
+
     public static AppiumDriver<MobileElement> driver;
     private static boolean isDriverStarted = false;
     private static long lastCommandTime = System.currentTimeMillis();
@@ -117,8 +129,9 @@ public class BaseClass {
                     cap.setCapability("platformVersion", platVer);
                 }
 
-                cap.setCapability("appPackage", "com.xometry.workcenter.preview.stage");
-                cap.setCapability("appActivity", "com.xometry.workcenter.preview.stage.MainActivity");
+                cap.setCapability("appPackage", APP_PACKAGE);
+                cap.setCapability("appActivity", APP_ACTIVITY);
+                System.out.println("📦 Appium launch: package=" + APP_PACKAGE + " activity=" + APP_ACTIVITY);
                 cap.setCapability("noReset", false);
                 cap.setCapability("fullReset", false);
                 cap.setCapability("automationName", "UiAutomator2");

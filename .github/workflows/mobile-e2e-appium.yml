@@ -1,4 +1,5 @@
-# Manual emulator-only E2E (same as CI — Main emulator job). Push to main runs CI in main.yml.
+# Optional manual run of the same emulator + Appium + testng.xml job as main.yml (workflow_dispatch only).
+# Push to main still runs the full suite automatically via CI — Main; this file does not add commit-message conditions.
 
 name: Mobile E2E (manual — emulator only)
 
@@ -41,6 +42,13 @@ jobs:
       - name: Compile tests
         shell: bash
         run: mvn -B -f appiumtests/pom.xml test-compile
+
+      - name: Enable KVM for emulator acceleration
+        shell: bash
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
 
       - uses: reactivecircus/android-emulator-runner@v2
         with:

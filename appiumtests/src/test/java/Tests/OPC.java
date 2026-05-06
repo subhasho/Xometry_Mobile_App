@@ -44,8 +44,6 @@ public class OPC extends BaseClass {
     /** Pause after description text so the form can settle before consent (Tests 10–11). */
     private static final int WAIT_AFTER_DESCRIPTION_FIELD_MS = 3000;
 
-    private static final String APP_PACKAGE = "com.xometry.workcenter.preview.stage";
-
     /**
      * Consent checkbox: parent row often has a long content-desc; target inner ViewGroup (not the full exact string).
      */
